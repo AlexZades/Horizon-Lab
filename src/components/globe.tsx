@@ -191,7 +191,7 @@ function GlobeMarker({
   const position = useMemo(() => latLngToVector3(point.lat, point.lng, GLOBE_RADIUS + 0.06), [point.lat, point.lng]);
   const tooltipPosition = position;
   const color = getPointColor(point);
-  const size = point.type === 'device' ? 0.055 : point.isHost ? 0.06 : 0.05;
+  const size = point.type === 'device' ? 0.0275 : point.isHost ? 0.045 : 0.0375;
 
   useFrame((state) => {
     if (!pulseRef.current) {
