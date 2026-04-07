@@ -1,8 +1,8 @@
-# HomeLab Dashboard 
+# Horizon-Lab Homelab Dashboard 
 
-Welcome to **HomeLab Dashboard**! This is a beautiful, 3D interactive dashboard built to help you monitor your homelab servers and services in style. 
+**Horizon-Lab Dashboard**! This is a 3D interactive dashboard built to help you monitor your homelab servers and web services while looking nice. 
 
-Whether you're hosting Plex, Grafana, or just keeping track of a few Raspberry Pis, this dashboard gives you a clean overview of what's online and offline, complete with a slick 3D spinning globe that visualizes traffic between your devices.
+Im vibe coded this to use on my truenas server but it should work in any homelab enviroment. Just run the docker container, add links to your services, and your done! Also suports mobile viewing.
 
 ## Features
 
