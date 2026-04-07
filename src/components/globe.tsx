@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Text, Billboard } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
@@ -218,6 +218,25 @@ function WireframeGlobe() {
 
 // --- Glowing Dot ---
 
+function makeTextTexture(text: string): THREE.Texture {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  canvas.width = 256;
+  canvas.height = 64;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = "bold 28px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 4;
+  ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function GlowingDot({
   position,
   color,
@@ -243,11 +262,15 @@ function GlowingDot({
     }
   });
 
-  // Compute a position slightly above the dot for the label
   const labelPosition = useMemo(() => {
     const dir = position.clone().normalize();
-    return position.clone().add(dir.multiplyScalar(0.15));
+    return position.clone().add(dir.multiplyScalar(0.18));
   }, [position]);
+
+  const labelTexture = useMemo(() => {
+    if (!label) return null;
+    return makeTextTexture(label);
+  }, [label]);
 
   return (
     <group ref={groupRef}>
@@ -259,19 +282,10 @@ function GlowingDot({
         <sphereGeometry args={[size * 2.5, 16, 16]} />
         <meshBasicMaterial color={color} transparent opacity={0.15} />
       </mesh>
-      {label && (
-        <Billboard position={labelPosition}>
-          <Text
-            fontSize={0.08}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="bottom"
-            outlineWidth={0.004}
-            outlineColor="#000000"
-          >
-            {label}
-          </Text>
-        </Billboard>
+      {labelTexture && (
+        <sprite position={labelPosition} scale={[0.4, 0.1, 1]}>
+          <spriteMaterial map={labelTexture} transparent depthWrite={false} />
+        </sprite>
       )}
     </group>
   );
