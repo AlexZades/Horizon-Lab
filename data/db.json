@@ -9,7 +9,7 @@
       "lng": 139.8885,
       "ipAddress": "192.168.0.17",
       "status": "online",
-      "lastChecked": "2026-04-07T11:43:14.111Z",
+      "lastChecked": "2026-04-07T12:18:24.168Z",
       "createdAt": "2026-04-07T10:38:30.362Z"
     },
     {
@@ -19,15 +19,15 @@
       "lng": -81.01859742306927,
       "ipAddress": "imagen.st4r.io",
       "status": "offline",
-      "lastChecked": "2026-04-07T11:43:14.111Z",
+      "lastChecked": "2026-04-07T12:18:24.168Z",
       "createdAt": "2026-04-07T11:39:23.040Z"
     }
   ],
   "settings": {
     "siteName": "Tower Network",
     "titleIconPath": null,
-    "deviceLat": 35.647,
-    "deviceLng": 139.8885,
+    "deviceLat": 0,
+    "deviceLng": 0,
     "dashboardHostServerId": "e0025fe2-a8f8-483b-9ac4-07e539477f4b"
   }
 }

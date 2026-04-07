@@ -27,16 +27,16 @@ import type { Server, Settings } from '@/lib/database';
 const defaultSettings: Settings = {
   siteName: 'HomeLab',
   titleIconPath: null,
-  deviceLat: null,
-  deviceLng: null,
+  deviceLat: 0,
+  deviceLng: 0,
   dashboardHostServerId: null,
 };
 
 const emptyNewServer = {
   name: '',
   ipAddress: '',
-  lat: '',
-  lng: '',
+  lat: '0',
+  lng: '0',
 };
 
 export default function SettingsPage() {
@@ -439,11 +439,11 @@ export default function SettingsPage() {
                     id="device-lat"
                     type="number"
                     step="any"
-                    value={settings.deviceLat ?? ''}
+                    value={settings.deviceLat ?? 0}
                     onChange={(event) =>
                       setSettings((current) => ({
                         ...current,
-                        deviceLat: event.target.value ? Number(event.target.value) : null,
+                        deviceLat: event.target.value === '' ? 0 : Number(event.target.value),
                       }))
                     }
                     className="border-white/10 bg-white/5"
@@ -456,11 +456,11 @@ export default function SettingsPage() {
                     id="device-lng"
                     type="number"
                     step="any"
-                    value={settings.deviceLng ?? ''}
+                    value={settings.deviceLng ?? 0}
                     onChange={(event) =>
                       setSettings((current) => ({
                         ...current,
-                        deviceLng: event.target.value ? Number(event.target.value) : null,
+                        deviceLng: event.target.value === '' ? 0 : Number(event.target.value),
                       }))
                     }
                     className="border-white/10 bg-white/5"

@@ -51,8 +51,8 @@ const defaultData: DbSchema = {
   settings: {
     siteName: 'HomeLab',
     titleIconPath: null,
-    deviceLat: null,
-    deviceLng: null,
+    deviceLat: 0,
+    deviceLng: 0,
     dashboardHostServerId: null,
   },
 };
