@@ -274,9 +274,10 @@ function createArc(from: THREE.Vector3, to: THREE.Vector3) {
 
 function TrafficStream({ connection }: { connection: TrafficConnection }) {
   const particleRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const particleCount = connection.kind === 'client' ? 5 : 4;
+  const particlesPerDirection = connection.kind === 'client' ? 3 : 2;
   const trailLength = 7;
   const speed = connection.kind === 'client' ? 0.09 : 0.07;
+  const totalParticles = particlesPerDirection * 2;
 
   const curve = useMemo(() => {
     const from = latLngToVector3(connection.from.lat, connection.from.lng, GLOBE_RADIUS + 0.04);
@@ -298,14 +299,20 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
 
-    for (let particleIndex = 0; particleIndex < particleCount; particleIndex += 1) {
+    for (let particleIndex = 0; particleIndex < totalParticles; particleIndex += 1) {
+      const isReverse = particleIndex >= particlesPerDirection;
+      const dirIndex = isReverse ? particleIndex - particlesPerDirection : particleIndex;
+
       for (let trailIndex = 0; trailIndex < trailLength; trailIndex += 1) {
         const refIndex = particleIndex * trailLength + trailIndex;
         const mesh = particleRefs.current[refIndex];
         if (!mesh) continue;
 
-        let t = (elapsed * speed + particleIndex / particleCount - trailIndex * 0.02) % 1;
+        let t = (elapsed * speed + dirIndex / particlesPerDirection - trailIndex * 0.02) % 1;
         if (t < 0) t += 1;
+
+        // Reverse direction for the second group
+        if (isReverse) t = 1 - t;
 
         const point = curve.getPointAt(t);
         const scale = trailIndex === 0 ? 1.1 : Math.max(0.3, 1 - trailIndex * 0.1);
@@ -328,7 +335,7 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
         />
       </line>
 
-      {Array.from({ length: particleCount }).map((_, particleIndex) =>
+      {Array.from({ length: totalParticles }).map((_, particleIndex) =>
         Array.from({ length: trailLength }).map((__, trailIndex) => {
           const refIndex = particleIndex * trailLength + trailIndex;
           const color = RAINBOW[(particleIndex + trailIndex) % RAINBOW.length];
