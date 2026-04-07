@@ -176,8 +176,8 @@ export default function Home() {
         onlineServices={onlineServices}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="relative flex-1 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))]">
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        <div className="relative min-h-[50vh] flex-1 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))] md:min-h-0">
           <TimeWidgets />
           <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
 
@@ -206,7 +206,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-[380px] shrink-0 border-l border-white/10 bg-black/45 backdrop-blur-2xl xl:w-[420px]">
+        <div className="h-[45vh] shrink-0 border-t border-white/10 bg-black/45 backdrop-blur-2xl md:h-auto md:w-[380px] md:border-l md:border-t-0 xl:w-[420px]">
           <ServicePanel
             services={services}
             servers={servers}
