@@ -1,5 +1,5 @@
 # Stage 1: Build the Next.js application
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY . .
 RUN yarn build
 
 # Stage 2: Create the production-ready image
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Set environment variables for Next.js production mode
 ENV NODE_ENV=production

@@ -1,9 +1,20 @@
 {
   "examples": [],
   "services": [],
-  "servers": [],
+  "servers": [
+    {
+      "id": "e0025fe2-a8f8-483b-9ac4-07e539477f4b",
+      "name": "Tower East",
+      "lat": 35.647,
+      "lng": 139.8885,
+      "ipAddress": "192.168.0.17",
+      "status": "online",
+      "lastChecked": "2026-04-07T10:39:24.054Z",
+      "createdAt": "2026-04-07T10:38:30.362Z"
+    }
+  ],
   "settings": {
-    "siteName": "HomeLab",
+    "siteName": "Tower Network",
     "titleIconPath": null,
     "deviceLat": null,
     "deviceLng": null,
