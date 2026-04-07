@@ -7,7 +7,7 @@
       "url": "http://192.168.0.17/ui/signin",
       "icon": "Shield",
       "status": "online",
-      "lastChecked": "2026-04-07T08:43:23.919Z",
+      "lastChecked": "2026-04-07T08:53:24.007Z",
       "createdAt": "2026-04-07T06:46:05.339Z",
       "serverId": null
     }
@@ -21,7 +21,7 @@
       "createdAt": "2026-04-07T06:47:52.595Z",
       "ipAddress": null,
       "status": "unknown",
-      "lastChecked": "2026-04-07T08:43:23.919Z"
+      "lastChecked": "2026-04-07T08:53:24.007Z"
     },
     {
       "id": "47496996-7f7f-4abd-bacd-c3a355e878ef",
@@ -31,7 +31,7 @@
       "createdAt": "2026-04-07T06:49:28.081Z",
       "ipAddress": null,
       "status": "unknown",
-      "lastChecked": "2026-04-07T08:43:23.919Z"
+      "lastChecked": "2026-04-07T08:53:24.007Z"
     }
   ],
   "settings": {
