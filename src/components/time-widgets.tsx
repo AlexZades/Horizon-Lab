@@ -74,7 +74,7 @@ export default function TimeWidgets() {
             {timeLabel}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {error ? 'Unable to refresh from time.gov right now.' : 'Time Synced to atomic clock server'}
+            {error ? 'Unable to refresh from time.gov right now.' : 'Live time sourced from time.gov.'}
           </p>
         </CardContent>
       </Card>
@@ -86,7 +86,6 @@ export default function TimeWidgets() {
             weekday
           </div>
           <div className="text-xl font-semibold text-white">{weekdayLabel}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Derived from the synced clock feed.</p>
         </CardContent>
       </Card>
     </div>
