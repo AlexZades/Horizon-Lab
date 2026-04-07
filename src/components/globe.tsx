@@ -189,10 +189,7 @@ function GlobeMarker({
 }) {
   const pulseRef = useRef<THREE.Mesh>(null);
   const position = useMemo(() => latLngToVector3(point.lat, point.lng, GLOBE_RADIUS + 0.06), [point.lat, point.lng]);
-  const tooltipPosition = useMemo(() => {
-    const offset = position.clone().normalize().multiplyScalar(0.22);
-    return position.clone().add(offset);
-  }, [position]);
+  const tooltipPosition = position;
   const color = getPointColor(point);
   const size = point.type === 'device' ? 0.055 : point.isHost ? 0.06 : 0.05;
 
@@ -228,7 +225,7 @@ function GlobeMarker({
       </mesh>
 
       {hovered ? (
-        <Html position={tooltipPosition} center distanceFactor={8} style={{ pointerEvents: 'none', transform: 'scale(0.25)', transformOrigin: 'center center' }}>
+        <Html position={tooltipPosition} distanceFactor={8} style={{ pointerEvents: 'none', transform: 'scale(0.25) translate(40px, -50%)', transformOrigin: 'left center' }}>
           <div className="min-w-[160px] rounded-xl border border-white/10 bg-black/80 px-2.5 py-2 text-white shadow-[0_0_24px_rgba(0,0,0,0.45)] backdrop-blur-xl">
             <div className="flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
