@@ -74,7 +74,7 @@ export default function TimeWidgets() {
             {timeLabel}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {error ? 'Unable to refresh from time.gov right now.' : 'Live time sourced from time.gov.'}
+            {error ? 'Unable to refresh from time.gov right now.' : 'Time Synced to atomic clock server'}
           </p>
         </CardContent>
       </Card>
