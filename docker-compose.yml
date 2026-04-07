@@ -10,7 +10,7 @@ services:
       - dyad_db_data:/app/data
     environment:
       NODE_ENV: production
-      DATABASE_URL: 'file:/app/data/dev.db'
+      DATABASE_DIR: '/app/data'
       # EXTERNAL_API_URL_SERVICE1: 'https://api.your-primary-service.com'
       # EXTERNAL_API_URL_SERVICE2: 'https://api.your-payment-gateway.com'
       # WEATHER_API_URL: 'https://api.your-weather-provider.com/v1'

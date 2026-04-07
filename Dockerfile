@@ -29,6 +29,8 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
+# Copy the data directory so the volume gets seeded with initial db.json on first run
+COPY --from=builder /app/data ./data
 # If you have static assets in a separate 'static' folder, copy them too
 # COPY --from=builder /app/static ./static
 
@@ -39,4 +41,3 @@ EXPOSE 3000
 
 # Command to run the Next.js application in production mode
 CMD ["yarn", "start"]
-
