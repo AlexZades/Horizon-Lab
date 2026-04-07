@@ -340,7 +340,7 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
           const refIndex = particleIndex * trailLength + trailIndex;
           const color = RAINBOW[(particleIndex + trailIndex) % RAINBOW.length];
           const opacity = trailIndex === 0 ? 0.95 : Math.max(0.16, 0.85 - trailIndex * 0.1);
-          const radius = trailIndex === 0 ? 0.028 : Math.max(0.01, 0.024 - trailIndex * 0.002);
+          const radius = trailIndex === 0 ? 0.014 : Math.max(0.005, 0.012 - trailIndex * 0.001);
 
           return (
             <mesh
