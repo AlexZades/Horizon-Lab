@@ -12,7 +12,7 @@ import type { Server, Settings } from "@/lib/database";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>({
-    siteName: "HomeLab",
+    siteName: "TowerNetwork",
     deviceLat: null,
     deviceLng: null,
   });
