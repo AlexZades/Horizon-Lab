@@ -1,0 +1,10 @@
+{
+  "examples": [],
+  "services": [],
+  "servers": [],
+  "settings": {
+    "siteName": "HomeLab",
+    "deviceLat": null,
+    "deviceLng": null
+  }
+}

@@ -1,28 +1,56 @@
 import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node'; // Correct import path for JSONFile
+import { JSONFile } from 'lowdb/node';
 import path from 'path';
-import fs from 'fs'; // Used only for checking directory existence synchronously for initial setup
+import fs from 'fs';
 
-// Define the generic shape of your database for the template.
-// The AI will extend this schema based on user's specific app requirements.
-interface DbSchema {
-  examples: { id: number; name: string; createdAt: string }[];
-  // Future: The AI will add new collections here based on user needs, e.g.,
-  // myCustomData: { id: string; value: string }[];
+export interface Service {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  status: 'online' | 'offline' | 'unknown';
+  lastChecked: string | null;
+  createdAt: string;
 }
 
-// Define the path for the JSON database file
+export interface Server {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  createdAt: string;
+}
+
+export interface Settings {
+  siteName: string;
+  deviceLat: number | null;
+  deviceLng: number | null;
+}
+
+interface DbSchema {
+  examples: { id: number; name: string; createdAt: string }[];
+  services: Service[];
+  servers: Server[];
+  settings: Settings;
+}
+
 const DB_FILE_NAME = 'db.json';
-const DB_DIR_PATH = process.env.DATABASE_DIR || './data'; // Allows configuring DB directory via env
+const DB_DIR_PATH = process.env.DATABASE_DIR || './data';
 const DB_FULL_PATH = path.resolve(process.cwd(), DB_DIR_PATH, DB_FILE_NAME);
 
 let dbInstance: Low<DbSchema> | null = null;
 
-/**
- * Initializes and returns a singleton Lowdb database instance.
- * If the database file doesn't exist, it will be created with default data.
- * @returns {Promise<Low<DbSchema>>} The database instance.
- */
+const defaultData: DbSchema = {
+  examples: [],
+  services: [],
+  servers: [],
+  settings: {
+    siteName: 'HomeLab',
+    deviceLat: null,
+    deviceLng: null,
+  },
+};
+
 export async function getDb(): Promise<Low<DbSchema>> {
   if (dbInstance) {
     if (dbInstance.data) {
@@ -33,17 +61,20 @@ export async function getDb(): Promise<Low<DbSchema>> {
   }
 
   try {
-    // Ensure the directory for the database file exists
     const dir = path.dirname(DB_FULL_PATH);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
     const adapter = new JSONFile<DbSchema>(DB_FULL_PATH);
-    // Provide initial generic structure for the template
-    dbInstance = new Low<DbSchema>(adapter, { examples: [] });
+    dbInstance = new Low<DbSchema>(adapter, defaultData);
 
     await dbInstance.read();
+
+    // Ensure all fields exist (migration for existing dbs)
+    if (!dbInstance.data.services) dbInstance.data.services = [];
+    if (!dbInstance.data.servers) dbInstance.data.servers = [];
+    if (!dbInstance.data.settings) dbInstance.data.settings = defaultData.settings;
 
     console.log(`Database initialized/loaded from: ${DB_FULL_PATH}`);
 
@@ -53,7 +84,3 @@ export async function getDb(): Promise<Low<DbSchema>> {
     throw error;
   }
 }
-
-// Note: With Lowdb and JSONFile adapter, after any modification to db.data,
-// you must call `db.write()` to persist changes to the file.
-// This will be handled in the API routes.
