@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV === "development") {
       config.module.rules.push({
         test: /\.(jsx|tsx)$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/, /src[\\/]components[\\/]globe\.tsx/],
         enforce: "pre",
         use: "@dyad-sh/nextjs-webpack-component-tagger",
       });
