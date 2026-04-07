@@ -34,7 +34,6 @@ export interface Settings {
 }
 
 interface DbSchema {
-  examples: { id: number; name: string; createdAt: string }[];
   services: Service[];
   servers: Server[];
   settings: Settings;
@@ -47,7 +46,6 @@ const DB_FULL_PATH = path.resolve(process.cwd(), DB_DIR_PATH, DB_FILE_NAME);
 let dbInstance: Low<DbSchema> | null = null;
 
 const defaultData: DbSchema = {
-  examples: [],
   services: [],
   servers: [],
   settings: {
