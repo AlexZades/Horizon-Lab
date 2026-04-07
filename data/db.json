@@ -9,15 +9,15 @@
       "lng": 139.8885,
       "ipAddress": "192.168.0.17",
       "status": "online",
-      "lastChecked": "2026-04-07T11:10:24.106Z",
+      "lastChecked": "2026-04-07T11:25:08.508Z",
       "createdAt": "2026-04-07T10:38:30.362Z"
     }
   ],
   "settings": {
     "siteName": "Tower Network",
     "titleIconPath": null,
-    "deviceLat": null,
-    "deviceLng": null,
+    "deviceLat": 35.647,
+    "deviceLng": 139.8885,
     "dashboardHostServerId": "e0025fe2-a8f8-483b-9ac4-07e539477f4b"
   }
 }

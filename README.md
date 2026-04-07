@@ -1,67 +1,68 @@
-# HomeLab Dashboard
+# HomeLab Dashboard 🚀
 
-A beautiful, 3D interactive dashboard for monitoring your homelab servers and services. Built with Next.js, React Three Fiber, Tailwind CSS, and a lightweight JSON database (`lowdb`).
+Welcome to **HomeLab Dashboard**! This is a beautiful, 3D interactive dashboard built to help you monitor your homelab servers and services in style. 
 
-## ✨ Features
+Whether you're hosting Plex, Grafana, or just keeping track of a few Raspberry Pis, this dashboard gives you a clean overview of what's online and offline, complete with a slick 3D spinning globe that visualizes traffic between your devices.
 
-- **3D Interactive Globe**: Visualizes your servers and client device in real-time. Displays animated rainbow traffic streams between online servers, and between the dashboard host and your current device.
-- **Server Management**: Add servers with geographic coordinates (Lat/Lng) and IP addresses for uptime monitoring. Designate one server as the "Dashboard Host".
-- **Service Monitoring**: Track the status of your homelab services (e.g., Plex, Grafana). Assign services to specific host servers, and see them grouped in the UI.
-- **Uptime Polling**: Automatically checks service HTTP endpoints and server TCP reachability every 60 seconds.
-- **Time.gov Synchronization**: Includes a sleek clock and weekday widget synced directly with NIST's authoritative time.gov API.
-- **Password Protection**: Secure your dashboard behind an animated lock screen using a simple environment variable.
-- **Custom Branding**: Upload your own custom logo/icon for the dashboard header right from the settings page.
-- **Docker Ready**: Fully containerized for easy deployment on any Docker host or platform like Dyad.
+## ✨ What's inside?
 
-## 🚀 Getting Started
+- **3D Interactive Globe**: See your servers and client devices on a 3D globe. It shows cool animated rainbow traffic streams between your online servers and your current device!
+- **Server & Service Monitoring**: Add your servers with their IP addresses and track your homelab services. The dashboard will automatically ping them every 60 seconds to make sure everything is running smoothly.
+- **Time.gov Sync**: Always know the exact time with a sleek clock widget synced straight to NIST's authoritative time.gov.
+- **Password Protection**: Want to keep your dashboard private? You can easily lock it behind a password screen.
+- **Custom Branding**: Make it yours by uploading a custom logo straight from the settings page!
 
-### Prerequisites
-- **Node.js**: v18 or higher (v22 recommended)
-- **Yarn** or **npm**
-- **Docker** (optional, for containerized deployment)
+## 🛠️ How to install it
 
-### Environment Variables
-Copy `.env.example` to `.env` (or set these in your deployment environment):
+You can run this project locally on your machine or deploy it using Docker (which is super easy!).
 
-```env
-# Optional: Require a password to view the dashboard
-DASHBOARD_PASSWORD=your-secure-password
+### Option 1: Running locally (for development)
 
-# Optional: Override the time.gov source used by the clock widgets
-TIME_GOV_API_URL=https://time.gov/
+Make sure you have [Node.js](https://nodejs.org/) installed (v18 or higher works best).
 
-# Optional: Define where the JSON database is stored
-DATABASE_DIR=./data
-```
-
-### Local Development
-
-1. **Install Dependencies**:
+1. **Clone the project** and open the folder in your terminal.
+2. **Install the dependencies**:
    ```bash
    yarn install
+   # or if you prefer npm: npm install
    ```
-
-2. **Run the Development Server**:
+3. **Start the development server**:
    ```bash
    yarn dev
+   # or npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser. You're good to go!
 
-### 🐳 Docker Deployment
+### Option 2: Running with Docker (Recommended for production)
 
-The application includes a `Dockerfile` and `docker-compose.yml` for easy containerization.
+If you just want to get it running 24/7 on your home server, Docker is the way to go. We've included everything you need.
 
-1. **Build and Run with Docker Compose**:
+1. **Start the container**:
    ```bash
    docker compose up -d --build
    ```
+2. **That's it!** The dashboard will be available at `http://localhost:3000`. 
+   
+*Note: The Docker setup automatically saves your settings and servers to a `data` folder so you won't lose anything if the container restarts.*
 
-2. **Persistent Data**:
-   The Docker Compose setup mounts a volume (`dyad_db_data`) to `/app/data` inside the container. This ensures your `db.json` (servers, services, and settings) persists across container restarts.
+## ⚙️ Configuration (Optional)
 
-## 🛠️ Tech Stack
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
-- **3D Visualization**: [Three.js](https://threejs.org/) & [React Three Fiber](https://docs.pmnd.rs/react-three-fiber/getting-started/introduction)
-- **Database**: [Lowdb](https://github.com/typicode/lowdb) (Local JSON file)
-- **Icons**: [Lucide React](https://lucide.dev/)
+If you want to customize a few things under the hood, you can create a `.env` file in the root folder and add these options:
+
+```env
+# Require a password to view the dashboard (leave empty for public access)
+DASHBOARD_PASSWORD=my-super-secret-password
+
+# Change where the database file is saved
+DATABASE_DIR=./data
+```
+
+## 💻 Tech Stack
+
+For the nerds out there, here's what powers this dashboard:
+- **Next.js** & **React** (App Router)
+- **Tailwind CSS** & **shadcn/ui** for the beautiful styling
+- **Three.js** & **React Three Fiber** for the 3D globe
+- **Lowdb** for a simple, lightweight local JSON database
+
+Enjoy monitoring your homelab! 🌍
