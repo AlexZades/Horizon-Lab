@@ -1,6 +1,6 @@
-# HomeLab Dashboard 
+# Horizon-Lab Homelab Dashboard 
 
-**HomeLab Dashboard**! This is a 3D interactive dashboard built to help you monitor your homelab servers and web services while looking nice. 
+**Horizon-Lab Dashboard**! This is a 3D interactive dashboard built to help you monitor your homelab servers and web services while looking nice. 
 
 Im vibe coded this to use on my truenas server but it should work in any homelab enviroment. Just run the docker container, add links to your services, and your done! Also suports mobile viewing.
 
