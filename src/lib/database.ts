@@ -43,8 +43,6 @@ const DB_FILE_NAME = 'db.json';
 const DB_DIR_PATH = process.env.DATABASE_DIR || './data';
 const DB_FULL_PATH = path.resolve(process.cwd(), DB_DIR_PATH, DB_FILE_NAME);
 
-let dbInstance: Low<DbSchema> | null = null;
-
 const defaultData: DbSchema = {
   services: [],
   servers: [],
@@ -57,13 +55,47 @@ const defaultData: DbSchema = {
   },
 };
 
+// Use globalThis to persist the db instance across HMR in development.
+// Without this, Next.js dev mode re-evaluates modules on hot reload,
+// resetting module-level variables and losing the cached instance.
+const globalForDb = globalThis as unknown as {
+  __lowdb_instance?: Low<DbSchema>;
+};
+
+function ensureDataIntegrity(data: DbSchema) {
+  if (!data.services) data.services = [];
+  if (!data.servers) data.servers = [];
+  if (!data.settings) data.settings = { ...defaultData.settings };
+  if (data.settings.titleIconPath === undefined) {
+    data.settings.titleIconPath = null;
+  }
+  if (data.settings.dashboardHostServerId === undefined) {
+    data.settings.dashboardHostServerId = null;
+  }
+
+  for (const service of data.services) {
+    if (service.serverId === undefined) service.serverId = null;
+    if (service.status === undefined) service.status = 'unknown';
+    if (service.lastChecked === undefined) service.lastChecked = null;
+    if (service.createdAt === undefined) service.createdAt = new Date().toISOString();
+  }
+
+  for (const server of data.servers) {
+    if (server.ipAddress === undefined) server.ipAddress = null;
+    if (server.status === undefined) server.status = 'unknown';
+    if (server.lastChecked === undefined) server.lastChecked = null;
+    if (server.createdAt === undefined) server.createdAt = new Date().toISOString();
+  }
+}
+
 export async function getDb(): Promise<Low<DbSchema>> {
-  if (dbInstance) {
-    if (dbInstance.data) {
-      return dbInstance;
-    }
-    await dbInstance.read();
-    return dbInstance;
+  // Reuse the existing instance stored on globalThis if available.
+  if (globalForDb.__lowdb_instance) {
+    // Always re-read from disk to pick up any external changes
+    // and to ensure we never serve stale in-memory data.
+    await globalForDb.__lowdb_instance.read();
+    ensureDataIntegrity(globalForDb.__lowdb_instance.data);
+    return globalForDb.__lowdb_instance;
   }
 
   try {
@@ -73,37 +105,24 @@ export async function getDb(): Promise<Low<DbSchema>> {
     }
 
     const adapter = new JSONFile<DbSchema>(DB_FULL_PATH);
-    dbInstance = new Low<DbSchema>(adapter, defaultData);
+    const db = new Low<DbSchema>(adapter, defaultData);
 
-    await dbInstance.read();
+    await db.read();
+    ensureDataIntegrity(db.data);
 
-    if (!dbInstance.data.services) dbInstance.data.services = [];
-    if (!dbInstance.data.servers) dbInstance.data.servers = [];
-    if (!dbInstance.data.settings) dbInstance.data.settings = defaultData.settings;
-    if (dbInstance.data.settings.titleIconPath === undefined) {
-      dbInstance.data.settings.titleIconPath = null;
-    }
-    if (dbInstance.data.settings.dashboardHostServerId === undefined) {
-      dbInstance.data.settings.dashboardHostServerId = null;
-    }
+    // Strip legacy keys (e.g. "examples") that are not part of the schema
+    const cleanData: DbSchema = {
+      services: db.data.services,
+      servers: db.data.servers,
+      settings: db.data.settings,
+    };
+    db.data = cleanData;
 
-    for (const service of dbInstance.data.services) {
-      if (service.serverId === undefined) service.serverId = null;
-      if (service.status === undefined) service.status = 'unknown';
-      if (service.lastChecked === undefined) service.lastChecked = null;
-      if (service.createdAt === undefined) service.createdAt = new Date().toISOString();
-    }
-
-    for (const server of dbInstance.data.servers) {
-      if (server.ipAddress === undefined) server.ipAddress = null;
-      if (server.status === undefined) server.status = 'unknown';
-      if (server.lastChecked === undefined) server.lastChecked = null;
-      if (server.createdAt === undefined) server.createdAt = new Date().toISOString();
-    }
+    globalForDb.__lowdb_instance = db;
 
     console.log(`Database initialized/loaded from: ${DB_FULL_PATH}`);
 
-    return dbInstance;
+    return db;
   } catch (error) {
     console.error('Failed to initialize Lowdb database:', error);
     throw error;
