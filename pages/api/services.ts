@@ -11,9 +11,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { name, url, icon } = req.body;
+      const { name, url, icon, serverId } = req.body;
       if (!name || !url) {
         return res.status(400).json({ message: 'Name and URL are required' });
+      }
+
+      const normalizedServerId = serverId || null;
+      if (normalizedServerId && !db.data.servers.some((server) => server.id === normalizedServerId)) {
+        return res.status(400).json({ message: 'Selected server does not exist' });
       }
 
       const newService: Service = {
@@ -21,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name,
         url,
         icon: icon || 'Globe',
+        serverId: normalizedServerId,
         status: 'unknown',
         lastChecked: null,
         createdAt: new Date().toISOString(),
@@ -32,21 +38,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { id, name, url, icon } = req.body;
-      const idx = db.data.services.findIndex((s) => s.id === id);
-      if (idx === -1) return res.status(404).json({ message: 'Service not found' });
+      const { id, name, url, icon, serverId } = req.body;
+      const index = db.data.services.findIndex((service) => service.id === id);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
 
-      if (name) db.data.services[idx].name = name;
-      if (url) db.data.services[idx].url = url;
-      if (icon) db.data.services[idx].icon = icon;
+      const normalizedServerId = serverId || null;
+      if (normalizedServerId && !db.data.servers.some((server) => server.id === normalizedServerId)) {
+        return res.status(400).json({ message: 'Selected server does not exist' });
+      }
+
+      if (name) db.data.services[index].name = name;
+      if (url) db.data.services[index].url = url;
+      if (icon) db.data.services[index].icon = icon;
+      db.data.services[index].serverId = normalizedServerId;
 
       await db.write();
-      return res.status(200).json(db.data.services[idx]);
+      return res.status(200).json(db.data.services[index]);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
-      db.data.services = db.data.services.filter((s) => s.id !== id);
+      db.data.services = db.data.services.filter((service) => service.id !== id);
       await db.write();
       return res.status(200).json({ message: 'Deleted' });
     }

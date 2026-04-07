@@ -1,15 +1,16 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   webpack: (config) => {
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === 'development') {
       config.module.rules.push({
         test: /\.(jsx|tsx)$/,
         exclude: [/node_modules/, /src[\\/]components[\\/]globe\.tsx/],
-        enforce: "pre",
-        use: "@dyad-sh/nextjs-webpack-component-tagger",
+        enforce: 'pre',
+        use: '@dyad-sh/nextjs-webpack-component-tagger',
       });
     }
+
     return config;
   },
   async rewrites() {
@@ -18,8 +19,7 @@ const nextConfig: NextConfig = {
     const externalApiUrlService1 = process.env.EXTERNAL_API_URL_SERVICE1;
     const externalApiUrlService2 = process.env.EXTERNAL_API_URL_SERVICE2;
     const weatherApiUrl = process.env.WEATHER_API_URL;
-    // Removed: pollinationExternalApiUrl from template's base config.
-    // The AI will add specific API rewrites based on user requests.
+    const timeGovApiUrl = process.env.TIME_GOV_API_URL;
 
     if (externalApiUrlService1) {
       rewrites.push({
@@ -42,12 +42,15 @@ const nextConfig: NextConfig = {
       });
     }
 
-    // Removed: Specific rewrite rule for Pollinations API.
-    // The AI is expected to add this when a user requests it.
+    if (timeGovApiUrl) {
+      rewrites.push({
+        source: '/api/time-gov-source',
+        destination: timeGovApiUrl,
+      });
+    }
 
     return rewrites;
   },
 };
 
 export default nextConfig;
-

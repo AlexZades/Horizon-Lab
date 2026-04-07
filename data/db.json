@@ -7,8 +7,9 @@
       "url": "http://192.168.0.17/ui/signin",
       "icon": "Shield",
       "status": "online",
-      "lastChecked": "2026-04-07T06:55:09.796Z",
-      "createdAt": "2026-04-07T06:46:05.339Z"
+      "lastChecked": "2026-04-07T08:43:23.919Z",
+      "createdAt": "2026-04-07T06:46:05.339Z",
+      "serverId": null
     }
   ],
   "servers": [
@@ -17,19 +18,26 @@
       "name": "Tower East",
       "lat": 35.647,
       "lng": 139.8885,
-      "createdAt": "2026-04-07T06:47:52.595Z"
+      "createdAt": "2026-04-07T06:47:52.595Z",
+      "ipAddress": null,
+      "status": "unknown",
+      "lastChecked": "2026-04-07T08:43:23.919Z"
     },
     {
       "id": "47496996-7f7f-4abd-bacd-c3a355e878ef",
       "name": "Tower West",
       "lat": 35.44046625402502,
       "lng": -81.01859608169313,
-      "createdAt": "2026-04-07T06:49:28.081Z"
+      "createdAt": "2026-04-07T06:49:28.081Z",
+      "ipAddress": null,
+      "status": "unknown",
+      "lastChecked": "2026-04-07T08:43:23.919Z"
     }
   ],
   "settings": {
     "siteName": "Tower Control Network",
     "deviceLat": null,
-    "deviceLng": null
+    "deviceLng": null,
+    "dashboardHostServerId": null
   }
 }

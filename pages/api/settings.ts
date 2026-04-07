@@ -10,10 +10,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { siteName, deviceLat, deviceLng } = req.body;
+      const { siteName, deviceLat, deviceLng, dashboardHostServerId } = req.body;
+
+      if (
+        dashboardHostServerId &&
+        !db.data.servers.some((server) => server.id === dashboardHostServerId)
+      ) {
+        return res.status(400).json({ message: 'Selected dashboard host does not exist' });
+      }
+
       if (siteName !== undefined) db.data.settings.siteName = siteName;
       if (deviceLat !== undefined) db.data.settings.deviceLat = deviceLat;
       if (deviceLng !== undefined) db.data.settings.deviceLng = deviceLng;
+      if (dashboardHostServerId !== undefined) {
+        db.data.settings.dashboardHostServerId = dashboardHostServerId || null;
+      }
 
       await db.write();
       return res.status(200).json(db.data.settings);

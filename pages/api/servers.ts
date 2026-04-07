@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { name, lat, lng } = req.body;
+      const { name, lat, lng, ipAddress } = req.body;
       if (!name || lat == null || lng == null) {
         return res.status(400).json({ message: 'Name, lat, and lng are required' });
       }
@@ -21,6 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name,
         lat: Number(lat),
         lng: Number(lng),
+        ipAddress: ipAddress?.trim() || null,
+        status: 'unknown',
+        lastChecked: null,
         createdAt: new Date().toISOString(),
       };
 
@@ -30,21 +33,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { id, name, lat, lng } = req.body;
-      const idx = db.data.servers.findIndex((s) => s.id === id);
-      if (idx === -1) return res.status(404).json({ message: 'Server not found' });
+      const { id, name, lat, lng, ipAddress } = req.body;
+      const index = db.data.servers.findIndex((server) => server.id === id);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Server not found' });
+      }
 
-      if (name) db.data.servers[idx].name = name;
-      if (lat != null) db.data.servers[idx].lat = Number(lat);
-      if (lng != null) db.data.servers[idx].lng = Number(lng);
+      if (name) db.data.servers[index].name = name;
+      if (lat != null) db.data.servers[index].lat = Number(lat);
+      if (lng != null) db.data.servers[index].lng = Number(lng);
+      if (ipAddress !== undefined) db.data.servers[index].ipAddress = ipAddress?.trim() || null;
 
       await db.write();
-      return res.status(200).json(db.data.servers[idx]);
+      return res.status(200).json(db.data.servers[index]);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
-      db.data.servers = db.data.servers.filter((s) => s.id !== id);
+      db.data.servers = db.data.servers.filter((server) => server.id !== id);
+      db.data.services = db.data.services.map((service) =>
+        service.serverId === id ? { ...service, serverId: null } : service
+      );
+      if (db.data.settings.dashboardHostServerId === id) {
+        db.data.settings.dashboardHostServerId = null;
+      }
       await db.write();
       return res.status(200).json({ message: 'Deleted' });
     }
