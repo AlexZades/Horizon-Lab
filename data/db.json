@@ -1,41 +1,10 @@
 {
   "examples": [],
-  "services": [
-    {
-      "id": "4fa3dae0-db95-424b-bbd7-a6cc5a271b74",
-      "name": "Tower East Admin",
-      "url": "http://192.168.0.17/ui/signin",
-      "icon": "Shield",
-      "status": "online",
-      "lastChecked": "2026-04-07T08:55:23.961Z",
-      "createdAt": "2026-04-07T06:46:05.339Z",
-      "serverId": null
-    }
-  ],
-  "servers": [
-    {
-      "id": "71d252a0-b552-4222-bd09-ac8a828cb54f",
-      "name": "Tower East",
-      "lat": 35.647,
-      "lng": 139.8885,
-      "createdAt": "2026-04-07T06:47:52.595Z",
-      "ipAddress": null,
-      "status": "unknown",
-      "lastChecked": "2026-04-07T08:55:23.961Z"
-    },
-    {
-      "id": "47496996-7f7f-4abd-bacd-c3a355e878ef",
-      "name": "Tower West",
-      "lat": 35.44046625402502,
-      "lng": -81.01859608169313,
-      "createdAt": "2026-04-07T06:49:28.081Z",
-      "ipAddress": null,
-      "status": "unknown",
-      "lastChecked": "2026-04-07T08:55:23.961Z"
-    }
-  ],
+  "services": [],
+  "servers": [],
   "settings": {
-    "siteName": "Tower Control Network",
+    "siteName": "HomeLab",
+    "titleIconPath": null,
     "deviceLat": null,
     "deviceLng": null,
     "dashboardHostServerId": null

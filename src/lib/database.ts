@@ -27,6 +27,7 @@ export interface Server {
 
 export interface Settings {
   siteName: string;
+  titleIconPath: string | null;
   deviceLat: number | null;
   deviceLng: number | null;
   dashboardHostServerId: string | null;
@@ -51,6 +52,7 @@ const defaultData: DbSchema = {
   servers: [],
   settings: {
     siteName: 'HomeLab',
+    titleIconPath: null,
     deviceLat: null,
     deviceLng: null,
     dashboardHostServerId: null,
@@ -80,6 +82,9 @@ export async function getDb(): Promise<Low<DbSchema>> {
     if (!dbInstance.data.services) dbInstance.data.services = [];
     if (!dbInstance.data.servers) dbInstance.data.servers = [];
     if (!dbInstance.data.settings) dbInstance.data.settings = defaultData.settings;
+    if (dbInstance.data.settings.titleIconPath === undefined) {
+      dbInstance.data.settings.titleIconPath = null;
+    }
     if (dbInstance.data.settings.dashboardHostServerId === undefined) {
       dbInstance.data.settings.dashboardHostServerId = null;
     }

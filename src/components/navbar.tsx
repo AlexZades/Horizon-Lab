@@ -1,21 +1,30 @@
 "use client";
 
-import { Server, Settings, Activity } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Activity, Server, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface NavbarProps {
   siteName: string;
+  titleIconPath: string | null;
   totalServices: number;
   onlineServices: number;
 }
 
-export default function Navbar({ siteName, totalServices, onlineServices }: NavbarProps) {
+export default function Navbar({ siteName, titleIconPath, totalServices, onlineServices }: NavbarProps) {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <Server className="h-5 w-5 text-purple-400" />
+          {titleIconPath ? (
+            <img
+              src={titleIconPath}
+              alt="Dashboard title icon"
+              className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10"
+            />
+          ) : (
+            <Server className="h-5 w-5 text-purple-400" />
+          )}
           <span className="text-lg font-semibold tracking-tight text-white">
             {siteName}
           </span>

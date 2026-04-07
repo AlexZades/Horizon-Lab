@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, MapPin, Plus, Save, ServerCog, Trash2 } from 'lucide-react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ImagePlus, MapPin, Plus, Save, ServerCog, Trash2, Upload, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,6 +26,7 @@ import type { Server, Settings } from '@/lib/database';
 
 const defaultSettings: Settings = {
   siteName: 'HomeLab',
+  titleIconPath: null,
   deviceLat: null,
   deviceLng: null,
   dashboardHostServerId: null,
@@ -36,6 +44,10 @@ export default function SettingsPage() {
   const [servers, setServers] = useState<Server[]>([]);
   const [newServer, setNewServer] = useState(emptyNewServer);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [iconDialogOpen, setIconDialogOpen] = useState(false);
+  const [selectedIconFile, setSelectedIconFile] = useState<File | null>(null);
+  const [selectedIconPreview, setSelectedIconPreview] = useState<string | null>(null);
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
 
   async function loadData() {
     const [settingsResponse, serversResponse] = await Promise.all([
@@ -175,6 +187,80 @@ export default function SettingsPage() {
     );
   }
 
+  function handleIconFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedIconFile(file);
+
+    if (!file) {
+      setSelectedIconPreview(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedIconPreview(typeof reader.result === 'string' ? reader.result : null);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadTitleIcon() {
+    if (!selectedIconFile || !selectedIconPreview) {
+      toast.error('Choose an image before uploading');
+      return;
+    }
+
+    setIsUploadingIcon(true);
+
+    try {
+      const response = await fetch('/api/title-icon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: selectedIconFile.name,
+          mimeType: selectedIconFile.type,
+          dataUrl: selectedIconPreview,
+        }),
+      });
+
+      const data = (await response.json()) as { titleIconPath?: string | null; message?: string };
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload icon');
+      }
+
+      setSettings((current) => ({ ...current, titleIconPath: data.titleIconPath ?? null }));
+      setSelectedIconFile(null);
+      setSelectedIconPreview(null);
+      setIconDialogOpen(false);
+      toast.success('Title icon updated');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to upload icon';
+      toast.error(message);
+    } finally {
+      setIsUploadingIcon(false);
+    }
+  }
+
+  async function removeTitleIcon() {
+    setIsUploadingIcon(true);
+
+    try {
+      const response = await fetch('/api/title-icon', { method: 'DELETE' });
+      if (!response.ok) {
+        throw new Error('Failed to remove icon');
+      }
+
+      setSettings((current) => ({ ...current, titleIconPath: null }));
+      setSelectedIconFile(null);
+      setSelectedIconPreview(null);
+      setIconDialogOpen(false);
+      toast.success('Title icon removed');
+    } catch {
+      toast.error('Failed to remove icon');
+    } finally {
+      setIsUploadingIcon(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(180deg,_rgba(5,8,22,1),_rgba(0,0,0,1))] text-white">
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-6 animate-page-open">
@@ -187,7 +273,7 @@ export default function SettingsPage() {
           <div>
             <h1 className="text-2xl font-semibold">Dashboard Settings</h1>
             <p className="text-sm text-muted-foreground">
-              Configure server locations, the dashboard host, and the client device position.
+              Configure server locations, the dashboard host, client location, and homepage branding.
             </p>
           </div>
         </div>
@@ -208,6 +294,100 @@ export default function SettingsPage() {
                   }
                   className="border-white/10 bg-white/5"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Homepage title icon</Label>
+                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                  {settings.titleIconPath ? (
+                    <img
+                      src={settings.titleIconPath}
+                      alt="Current homepage title icon"
+                      className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/10"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/30 text-muted-foreground">
+                      <ImagePlus className="h-4 w-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white">Homepage title icon</p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload a PNG, JPG, WEBP, or GIF to replace the icon next to the title.
+                    </p>
+                  </div>
+                  <Dialog
+                    open={iconDialogOpen}
+                    onOpenChange={(open) => {
+                      setIconDialogOpen(open);
+                      if (!open) {
+                        setSelectedIconFile(null);
+                        setSelectedIconPreview(null);
+                      }
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="border-white/10 bg-white/5">
+                        Change icon
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="border-white/10 bg-zinc-950 text-white">
+                      <DialogHeader>
+                        <DialogTitle>Change homepage title icon</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="title-icon-upload">Upload image</Label>
+                          <Input
+                            id="title-icon-upload"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            onChange={handleIconFileChange}
+                            className="border-white/10 bg-white/5 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white"
+                          />
+                          <p className="text-xs text-muted-foreground">Max size: 2MB.</p>
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Preview</p>
+                          <div className="flex items-center gap-3">
+                            {selectedIconPreview || settings.titleIconPath ? (
+                              <img
+                                src={selectedIconPreview ?? settings.titleIconPath ?? ''}
+                                alt="Title icon preview"
+                                className="h-12 w-12 rounded-xl object-cover ring-1 ring-white/10"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-white/15 bg-black/40 text-muted-foreground">
+                                <ImagePlus className="h-5 w-5" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-white">{settings.siteName}</p>
+                              <p className="text-xs text-muted-foreground">Shown next to the homepage title.</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap justify-between gap-2">
+                          <Button
+                            variant="ghost"
+                            className="gap-2 text-muted-foreground hover:text-red-300"
+                            onClick={removeTitleIcon}
+                            disabled={isUploadingIcon || !settings.titleIconPath}
+                          >
+                            <X className="h-4 w-4" />
+                            Remove icon
+                          </Button>
+                          <Button onClick={uploadTitleIcon} disabled={isUploadingIcon || !selectedIconFile} className="gap-2">
+                            <Upload className="h-4 w-4" />
+                            Upload icon
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
 
               <div className="space-y-2">

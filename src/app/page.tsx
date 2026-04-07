@@ -29,6 +29,7 @@ type TrafficConnection = {
 
 const defaultSettings: Settings = {
   siteName: 'HomeLab',
+  titleIconPath: null,
   deviceLat: null,
   deviceLng: null,
   dashboardHostServerId: null,
@@ -170,6 +171,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col overflow-hidden bg-black animate-page-open">
       <Navbar
         siteName={settings.siteName}
+        titleIconPath={settings.titleIconPath}
         totalServices={services.length}
         onlineServices={onlineServices}
       />

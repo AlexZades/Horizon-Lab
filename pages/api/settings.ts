@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { siteName, deviceLat, deviceLng, dashboardHostServerId } = req.body;
+      const { siteName, titleIconPath, deviceLat, deviceLng, dashboardHostServerId } = req.body;
 
       if (
         dashboardHostServerId &&
@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (siteName !== undefined) db.data.settings.siteName = siteName;
+      if (titleIconPath !== undefined) db.data.settings.titleIconPath = titleIconPath || null;
       if (deviceLat !== undefined) db.data.settings.deviceLat = deviceLat;
       if (deviceLng !== undefined) db.data.settings.deviceLng = deviceLng;
       if (dashboardHostServerId !== undefined) {
