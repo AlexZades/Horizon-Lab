@@ -9,8 +9,18 @@
       "lng": 139.8885,
       "ipAddress": "192.168.0.17",
       "status": "online",
-      "lastChecked": "2026-04-07T11:25:08.508Z",
+      "lastChecked": "2026-04-07T11:43:14.111Z",
       "createdAt": "2026-04-07T10:38:30.362Z"
+    },
+    {
+      "id": "0c9b74d1-e10c-4d9c-91d2-506d5b0ea2c6",
+      "name": "Tower West",
+      "lat": 35.440464068337,
+      "lng": -81.01859742306927,
+      "ipAddress": "imagen.st4r.io",
+      "status": "offline",
+      "lastChecked": "2026-04-07T11:43:14.111Z",
+      "createdAt": "2026-04-07T11:39:23.040Z"
     }
   ],
   "settings": {

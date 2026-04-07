@@ -124,6 +124,90 @@ function serverStatusBadge(status: ServerType['status']) {
   return 'bg-amber-500/10 text-amber-200 border-amber-400/20';
 }
 
+function ServiceForm({
+  form,
+  setForm,
+  servers,
+  onSubmit,
+  submitLabel,
+}: {
+  form: ServiceFormState;
+  setForm: React.Dispatch<React.SetStateAction<ServiceFormState>>;
+  servers: ServerType[];
+  onSubmit: () => void;
+  submitLabel: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="service-name">Name</Label>
+        <Input
+          id="service-name"
+          value={form.name}
+          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+          placeholder="Grafana"
+          className="border-white/10 bg-white/5"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="service-url">URL</Label>
+        <Input
+          id="service-url"
+          value={form.url}
+          onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))}
+          placeholder="https://grafana.local"
+          className="border-white/10 bg-white/5"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Server host</Label>
+        <Select
+          value={form.serverId}
+          onValueChange={(value) => setForm((current) => ({ ...current, serverId: value }))}
+        >
+          <SelectTrigger className="border-white/10 bg-white/5">
+            <SelectValue placeholder="Select a server" />
+          </SelectTrigger>
+          <SelectContent className="border-white/10 bg-zinc-950 text-white">
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {servers.map((server) => (
+              <SelectItem key={server.id} value={server.id}>
+                {server.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Icon</Label>
+        <div className="grid grid-cols-6 gap-2">
+          {ICON_NAMES.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setForm((current) => ({ ...current, icon: name }))}
+              className={`flex h-10 items-center justify-center rounded-md border transition-colors ${
+                form.icon === name
+                  ? 'border-purple-400/50 bg-purple-500/15 text-purple-200'
+                  : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white'
+              }`}
+            >
+              <ServiceIcon name={name} className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button onClick={onSubmit} className="w-full">
+        {submitLabel}
+      </Button>
+    </div>
+  );
+}
+
 export default function ServicePanel({
   services,
   servers,
@@ -249,84 +333,6 @@ export default function ServicePanel({
     setEditOpen(true);
   }
 
-  function ServiceForm({
-    onSubmit,
-    submitLabel,
-  }: {
-    onSubmit: () => void;
-    submitLabel: string;
-  }) {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="service-name">Name</Label>
-          <Input
-            id="service-name"
-            value={form.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            placeholder="Grafana"
-            className="border-white/10 bg-white/5"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="service-url">URL</Label>
-          <Input
-            id="service-url"
-            value={form.url}
-            onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))}
-            placeholder="https://grafana.local"
-            className="border-white/10 bg-white/5"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Server host</Label>
-          <Select
-            value={form.serverId}
-            onValueChange={(value) => setForm((current) => ({ ...current, serverId: value }))}
-          >
-            <SelectTrigger className="border-white/10 bg-white/5">
-              <SelectValue placeholder="Select a server" />
-            </SelectTrigger>
-            <SelectContent className="border-white/10 bg-zinc-950 text-white">
-              <SelectItem value="unassigned">Unassigned</SelectItem>
-              {servers.map((server) => (
-                <SelectItem key={server.id} value={server.id}>
-                  {server.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Icon</Label>
-          <div className="grid grid-cols-6 gap-2">
-            {ICON_NAMES.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => setForm((current) => ({ ...current, icon: name }))}
-                className={`flex h-10 items-center justify-center rounded-md border transition-colors ${
-                  form.icon === name
-                    ? 'border-purple-400/50 bg-purple-500/15 text-purple-200'
-                    : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <ServiceIcon name={name} className="h-4 w-4" />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Button onClick={onSubmit} className="w-full">
-          {submitLabel}
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -361,7 +367,13 @@ export default function ServicePanel({
               <DialogHeader>
                 <DialogTitle>Add service</DialogTitle>
               </DialogHeader>
-              <ServiceForm onSubmit={handleAdd} submitLabel="Add service" />
+              <ServiceForm
+                form={form}
+                setForm={setForm}
+                servers={servers}
+                onSubmit={handleAdd}
+                submitLabel="Add service"
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -477,7 +489,13 @@ export default function ServicePanel({
           <DialogHeader>
             <DialogTitle>Edit service</DialogTitle>
           </DialogHeader>
-          <ServiceForm onSubmit={handleEdit} submitLabel="Save changes" />
+          <ServiceForm
+            form={form}
+            setForm={setForm}
+            servers={servers}
+            onSubmit={handleEdit}
+            submitLabel="Save changes"
+          />
         </DialogContent>
       </Dialog>
     </div>
