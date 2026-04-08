@@ -40,8 +40,7 @@ interface DbSchema {
 }
 
 const DB_FILE_NAME = 'db.json';
-const DB_DIR_PATH = process.env.DATABASE_DIR || './data';
-const DB_FULL_PATH = path.resolve(process.cwd(), DB_DIR_PATH, DB_FILE_NAME);
+const DB_DIR = 'data';
 
 const defaultData: DbSchema = {
   services: [],
@@ -89,6 +88,11 @@ function ensureDataIntegrity(data: DbSchema) {
 }
 
 export async function getDb(): Promise<Low<DbSchema>> {
+  // Resolve the database path at runtime (not module-load time) so that
+  // process.cwd() always reflects the actual working directory of the
+  // running process, not the build-time directory.
+  const dbFullPath = path.resolve(process.cwd(), DB_DIR, DB_FILE_NAME);
+
   // Reuse the existing instance stored on globalThis if available.
   if (globalForDb.__lowdb_instance) {
     // Always re-read from disk to pick up any external changes
@@ -99,12 +103,12 @@ export async function getDb(): Promise<Low<DbSchema>> {
   }
 
   try {
-    const dir = path.dirname(DB_FULL_PATH);
+    const dir = path.dirname(dbFullPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    const adapter = new JSONFile<DbSchema>(DB_FULL_PATH);
+    const adapter = new JSONFile<DbSchema>(dbFullPath);
     const db = new Low<DbSchema>(adapter, defaultData);
 
     await db.read();
@@ -120,7 +124,7 @@ export async function getDb(): Promise<Low<DbSchema>> {
 
     globalForDb.__lowdb_instance = db;
 
-    console.log(`Database initialized/loaded from: ${DB_FULL_PATH}`);
+    console.log(`Database initialized/loaded from: ${dbFullPath}`);
 
     return db;
   } catch (error) {

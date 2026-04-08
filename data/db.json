@@ -7,8 +7,8 @@
       "lat": 35.647,
       "lng": 139.8885,
       "ipAddress": "192.168.0.17",
-      "status": "online",
-      "lastChecked": "2026-04-07T13:06:40.267Z",
+      "status": "offline",
+      "lastChecked": "2026-04-08T06:15:08.650Z",
       "createdAt": "2026-04-07T10:38:30.362Z"
     },
     {
@@ -18,7 +18,7 @@
       "lng": -81.01859742306927,
       "ipAddress": "imagen.st4r.io",
       "status": "offline",
-      "lastChecked": "2026-04-07T13:06:40.267Z",
+      "lastChecked": "2026-04-08T06:15:08.650Z",
       "createdAt": "2026-04-07T11:39:23.040Z"
     }
   ],
