@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { feature } from 'topojson-client';
@@ -11,105 +11,6 @@ import type { Feature, FeatureCollection, Geometry, GeoJsonProperties } from 'ge
 const GLOBE_RADIUS = 2;
 const ROTATION_SPEED = 0.08;
 const RAINBOW = ['#ff4d6d', '#ff9f1c', '#ffe66d', '#2ec4b6', '#4cc9f0', '#7b61ff', '#f72585'];
-
-// Zoom thresholds
-const ZOOM_SHOW_SATELLITES = 3.8; // Camera distance below which satellites appear
-const ZOOM_SHOW_DETAILS = 3.0;   // Camera distance below which satellite details appear
-const ZOOM_MIN_DISTANCE = 2.4;
-const ZOOM_MAX_DISTANCE = 8.0;
-const DEFAULT_CAMERA_DISTANCE = 5.6;
-
-// Satellite inclination categories (like satellitemap.space)
-type InclinationCategory = 'equatorial' | 'low' | 'medium' | 'high' | 'retrograde';
-
-interface SatelliteData {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  altitude: number; // km
-  speed: number; // km/h
-  inclination: InclinationCategory;
-  noradId: number;
-}
-
-const INCLINATION_COLORS: Record<InclinationCategory, string> = {
-  equatorial: '#ff3333',
-  low: '#ff8833',
-  medium: '#cccc33',
-  high: '#33cc33',
-  retrograde: '#5555ff',
-};
-
-const INCLINATION_LABELS: Record<InclinationCategory, { label: string; range: string }> = {
-  equatorial: { label: 'Equatorial', range: '0°-10°' },
-  low: { label: 'Low', range: '10°-60°' },
-  medium: { label: 'Medium', range: '60°-80°' },
-  high: { label: 'High', range: '80°-100°' },
-  retrograde: { label: 'Retrograde', range: '100°-180°' },
-};
-
-// Generate realistic-looking satellite data distributed around the globe
-function generateSatelliteData(count: number, seed: number = 42): SatelliteData[] {
-  const satellites: SatelliteData[] = [];
-  const rng = createSeededRandom(seed);
-
-  const constellations = [
-    { prefix: 'Starlink', count: Math.floor(count * 0.55), inclinationBias: 'medium' as InclinationCategory, altRange: [340, 570] },
-    { prefix: 'OneWeb', count: Math.floor(count * 0.12), inclinationBias: 'high' as InclinationCategory, altRange: [1200, 1250] },
-    { prefix: 'GPS', count: Math.floor(count * 0.03), inclinationBias: 'medium' as InclinationCategory, altRange: [20180, 20220] },
-    { prefix: 'Iridium', count: Math.floor(count * 0.02), inclinationBias: 'high' as InclinationCategory, altRange: [780, 790] },
-    { prefix: 'COSMOS', count: Math.floor(count * 0.08), inclinationBias: 'low' as InclinationCategory, altRange: [400, 1500] },
-    { prefix: 'SAT', count: Math.floor(count * 0.2), inclinationBias: 'equatorial' as InclinationCategory, altRange: [200, 2000] },
-  ];
-
-  let globalId = 0;
-  for (const constellation of constellations) {
-    for (let i = 0; i < constellation.count; i++) {
-      const lat = (rng() * 2 - 1) * 80; // -80 to 80
-      const lng = rng() * 360 - 180;
-      const alt = constellation.altRange[0] + rng() * (constellation.altRange[1] - constellation.altRange[0]);
-      const speed = 25000 + rng() * 5000;
-
-      // Assign inclination with bias
-      let inclination: InclinationCategory;
-      const roll = rng();
-      if (roll < 0.5) {
-        inclination = constellation.inclinationBias;
-      } else if (roll < 0.7) {
-        inclination = 'low';
-      } else if (roll < 0.85) {
-        inclination = 'medium';
-      } else if (roll < 0.95) {
-        inclination = 'high';
-      } else {
-        inclination = rng() > 0.5 ? 'equatorial' : 'retrograde';
-      }
-
-      satellites.push({
-        id: `sat-${globalId}`,
-        name: `${constellation.prefix} ${1000 + globalId}`,
-        lat,
-        lng,
-        altitude: Math.round(alt),
-        speed: Math.round(speed),
-        inclination,
-        noradId: 40000 + globalId,
-      });
-      globalId++;
-    }
-  }
-
-  return satellites;
-}
-
-function createSeededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
 
 export interface GlobePoint {
   id: string;
@@ -137,7 +38,6 @@ interface GlobeProps {
   points?: GlobePoint[];
   connections?: TrafficConnection[];
   className?: string;
-  onZoomChange?: (zoomLevel: number, cameraDistance: number) => void;
 }
 
 function latLngToVector3(lat: number, lng: number, radius: number) {
@@ -444,6 +344,7 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
         let t = (elapsed * speed + dirIndex / particlesPerDirection - trailIndex * 0.02) % 1;
         if (t < 0) t += 1;
 
+        // Reverse direction for the second group
         if (isReverse) t = 1 - t;
 
         const point = curve.getPointAt(t);
@@ -491,211 +392,16 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
   );
 }
 
-// Satellite dot that orbits slightly above the globe surface
-function SatelliteDot({
-  satellite,
-  showDetails,
-  hovered,
-  setHovered,
-}: {
-  satellite: SatelliteData;
-  showDetails: boolean;
-  hovered: boolean;
-  setHovered: React.Dispatch<React.SetStateAction<string | null>>;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-
-  // Satellites orbit slightly above the globe surface
-  const altitudeScale = 0.02 + Math.min(satellite.altitude / 40000, 0.08);
-  const orbitRadius = GLOBE_RADIUS + altitudeScale;
-
-  const position = useMemo(
-    () => latLngToVector3(satellite.lat, satellite.lng, orbitRadius),
-    [satellite.lat, satellite.lng, orbitRadius]
-  );
-
-  const color = INCLINATION_COLORS[satellite.inclination];
-  const dotSize = 0.018;
-
-  useFrame((state) => {
-    if (glowRef.current) {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 3 + satellite.noradId) * 0.3;
-      glowRef.current.scale.setScalar(pulse);
-    }
-  });
-
-  return (
-    <group>
-      <mesh
-        ref={meshRef}
-        position={position}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(satellite.id);
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(null);
-        }}
-      >
-        <sphereGeometry args={[dotSize, 8, 8]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-
-      <mesh ref={glowRef} position={position}>
-        <sphereGeometry args={[dotSize * 2.5, 8, 8]} />
-        <meshBasicMaterial color={color} transparent opacity={0.15} />
-      </mesh>
-
-      {hovered && showDetails ? (
-        <Html
-          position={position}
-          distanceFactor={6}
-          center
-          style={{ pointerEvents: 'none', transform: 'translate(0, -120%)' }}
-        >
-          <div className="min-w-[180px] rounded-lg border border-white/15 bg-black/90 px-3 py-2 text-white shadow-[0_0_20px_rgba(0,0,0,0.6)] backdrop-blur-xl" style={{ fontSize: '10px' }}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-bold" style={{ color, fontSize: '12px' }}>{satellite.name}</span>
-              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8px] text-white/60">
-                NORAD {satellite.noradId}
-              </span>
-            </div>
-            <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 text-[9px]">
-              <div className="text-white/50">Speed</div>
-              <div className="text-right font-mono">{satellite.speed.toLocaleString()} km/h</div>
-              <div className="text-white/50">Altitude</div>
-              <div className="text-right font-mono">{satellite.altitude.toLocaleString()} km</div>
-              <div className="text-white/50">Lat</div>
-              <div className="text-right font-mono">{satellite.lat.toFixed(2)}°</div>
-              <div className="text-white/50">Lng</div>
-              <div className="text-right font-mono">{satellite.lng.toFixed(2)}°</div>
-              <div className="text-white/50">Inclination</div>
-              <div className="text-right capitalize" style={{ color }}>{satellite.inclination}</div>
-            </div>
-          </div>
-        </Html>
-      ) : null}
-
-      {/* Show name label near the dot when zoomed in enough */}
-      {showDetails && !hovered ? (
-        <Html
-          position={position}
-          distanceFactor={6}
-          center
-          style={{ pointerEvents: 'none', transform: 'translate(14px, -4px)' }}
-        >
-          <div className="whitespace-nowrap text-[7px] font-mono text-white/40">
-            •{satellite.noradId}
-          </div>
-        </Html>
-      ) : null}
-    </group>
-  );
-}
-
-// Manages satellite visibility based on camera distance and which are in view
-function SatelliteLayer({
-  satellites,
-  cameraDistance,
-}: {
-  satellites: SatelliteData[];
-  cameraDistance: number;
-}) {
-  const [hoveredSatId, setHoveredSatId] = useState<string | null>(null);
-  const { camera } = useThree();
-
-  const showSatellites = cameraDistance < ZOOM_SHOW_SATELLITES;
-  const showDetails = cameraDistance < ZOOM_SHOW_DETAILS;
-
-  // Filter satellites to only show those roughly facing the camera
-  const visibleSatellites = useMemo(() => {
-    if (!showSatellites) return [];
-
-    const cameraDir = camera.position.clone().normalize();
-    // Show more satellites as we zoom in
-    const dotThreshold = cameraDistance < 3.0 ? -0.2 : 0.1;
-
-    return satellites.filter((sat) => {
-      const satPos = latLngToVector3(sat.lat, sat.lng, GLOBE_RADIUS).normalize();
-      return satPos.dot(cameraDir) > dotThreshold;
-    });
-  }, [showSatellites, satellites, camera.position, cameraDistance]);
-
-  if (!showSatellites) return null;
-
-  return (
-    <group>
-      {visibleSatellites.map((sat) => (
-        <SatelliteDot
-          key={sat.id}
-          satellite={sat}
-          showDetails={showDetails}
-          hovered={hoveredSatId === sat.id}
-          setHovered={setHoveredSatId}
-        />
-      ))}
-    </group>
-  );
-}
-
-// Tracks camera distance and reports it
-function CameraTracker({ onDistanceChange }: { onDistanceChange: (d: number) => void }) {
-  const { camera } = useThree();
-  const lastReported = useRef(DEFAULT_CAMERA_DISTANCE);
-
-  useFrame(() => {
-    const dist = camera.position.length();
-    // Only report if changed significantly to avoid excessive re-renders
-    if (Math.abs(dist - lastReported.current) > 0.05) {
-      lastReported.current = dist;
-      onDistanceChange(dist);
-    }
-  });
-
-  return null;
-}
-
-function Scene({
-  points,
-  connections,
-  satellites,
-  onZoomChange,
-}: {
-  points: GlobePoint[];
-  connections: TrafficConnection[];
-  satellites: SatelliteData[];
-  onZoomChange?: (zoomLevel: number, cameraDistance: number) => void;
-}) {
+function Scene({ points, connections }: { points: GlobePoint[]; connections: TrafficConnection[] }) {
   const rotationGroupRef = useRef<THREE.Group>(null);
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
-  const [cameraDistance, setCameraDistance] = useState(DEFAULT_CAMERA_DISTANCE);
-  const controlsRef = useRef<any>(null);
-
-  // Slow down / stop auto-rotation when zoomed in
-  const isZoomedIn = cameraDistance < ZOOM_SHOW_SATELLITES;
-
-  const handleDistanceChange = useCallback(
-    (dist: number) => {
-      setCameraDistance(dist);
-      if (onZoomChange) {
-        // Normalize zoom: 0 = max distance, 1 = min distance
-        const normalized = 1 - (dist - ZOOM_MIN_DISTANCE) / (ZOOM_MAX_DISTANCE - ZOOM_MIN_DISTANCE);
-        onZoomChange(Math.max(0, Math.min(1, normalized)), dist);
-      }
-    },
-    [onZoomChange]
-  );
 
   useFrame((_, delta) => {
     if (!rotationGroupRef.current) {
       return;
     }
 
-    // Reduce rotation speed when zoomed in
-    const speedMultiplier = isZoomedIn ? 0.1 : 1;
-    rotationGroupRef.current.rotation.y += delta * ROTATION_SPEED * speedMultiplier;
+    rotationGroupRef.current.rotation.y += delta * ROTATION_SPEED;
   });
 
   return (
@@ -703,8 +409,6 @@ function Scene({
       <ambientLight intensity={0.8} />
       <pointLight position={[4, 3, 5]} intensity={1.6} color="#c084fc" />
       <pointLight position={[-4, -2, -3]} intensity={1.2} color="#38bdf8" />
-
-      <CameraTracker onDistanceChange={handleDistanceChange} />
 
       <group ref={rotationGroupRef}>
         <PointCloud />
@@ -721,63 +425,25 @@ function Scene({
             setHovered={setHoveredPointId}
           />
         ))}
-        <SatelliteLayer satellites={satellites} cameraDistance={cameraDistance} />
       </group>
 
       <OrbitControls
-        ref={controlsRef}
-        enableZoom={true}
+        enableZoom={false}
         enablePan={false}
         autoRotate={false}
-        minDistance={ZOOM_MIN_DISTANCE}
-        maxDistance={ZOOM_MAX_DISTANCE}
-        zoomSpeed={0.8}
-        minPolarAngle={Math.PI / 6}
-        maxPolarAngle={(5 * Math.PI) / 6}
-        // Smooth damping for nice feel
-        enableDamping={true}
-        dampingFactor={0.08}
+        minPolarAngle={Math.PI / 4}
+        maxPolarAngle={(3 * Math.PI) / 4}
       />
     </>
   );
 }
 
-// Pre-generate satellite data once
-const SATELLITE_DATA = generateSatelliteData(800);
-
-// Compute distribution stats
-const SATELLITE_STATS = (() => {
-  const counts: Record<InclinationCategory, number> = {
-    equatorial: 0,
-    low: 0,
-    medium: 0,
-    high: 0,
-    retrograde: 0,
-  };
-  for (const sat of SATELLITE_DATA) {
-    counts[sat.inclination]++;
-  }
-  return { total: SATELLITE_DATA.length, counts };
-})();
-
-export default function Globe({ points = [], connections = [], className, onZoomChange }: GlobeProps) {
+export default function Globe({ points = [], connections = [], className }: GlobeProps) {
   return (
     <div className={className}>
-      <Canvas
-        camera={{ position: [0, 0, DEFAULT_CAMERA_DISTANCE], fov: 42 }}
-        gl={{ alpha: true, antialias: true }}
-      >
-        <Scene
-          points={points}
-          connections={connections}
-          satellites={SATELLITE_DATA}
-          onZoomChange={onZoomChange}
-        />
+      <Canvas camera={{ position: [0, 0, 5.6], fov: 42 }} gl={{ alpha: true, antialias: true }}>
+        <Scene points={points} connections={connections} />
       </Canvas>
     </div>
   );
 }
-
-// Export for use in the overlay UI
-export { INCLINATION_COLORS, INCLINATION_LABELS, SATELLITE_STATS, ZOOM_SHOW_SATELLITES, ZOOM_SHOW_DETAILS };
-export type { InclinationCategory };

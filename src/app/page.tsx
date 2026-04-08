@@ -6,7 +6,6 @@ import { useTheme } from 'next-themes';
 import Navbar from '@/components/navbar';
 import ServicePanel from '@/components/service-panel';
 import TimeWidgets from '@/components/time-widgets';
-import SatelliteOverlay from '@/components/satellite-overlay';
 import type { Service, Server, Settings } from '@/lib/database';
 
 const Globe = dynamic(() => import('@/components/globe'), { ssr: false });
@@ -51,8 +50,6 @@ export default function Home() {
   const [servers, setServers] = useState<Server[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [isChecking, setIsChecking] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(0);
-  const [cameraDistance, setCameraDistance] = useState(5.6);
   const { setTheme } = useTheme();
 
   const fetchData = useCallback(async () => {
@@ -83,11 +80,6 @@ export default function Home() {
       setIsChecking(false);
     }
   }, [fetchData]);
-
-  const handleZoomChange = useCallback((zoom: number, distance: number) => {
-    setZoomLevel(zoom);
-    setCameraDistance(distance);
-  }, []);
 
   useEffect(() => {
     fetchData();
@@ -240,19 +232,7 @@ export default function Home() {
         {/* ── Globe (fills entire area behind everything) ── */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))]">
           <div className="h-full w-full animate-boot-globe">
-            <Globe
-              points={globePoints}
-              connections={trafficConnections}
-              className="h-full w-full"
-              onZoomChange={handleZoomChange}
-            />
-          </div>
-        </div>
-
-        {/* ── Satellite overlay (zoom-dependent) ── */}
-        <div className="pointer-events-none absolute inset-0 z-10">
-          <div className="pointer-events-auto">
-            <SatelliteOverlay cameraDistance={cameraDistance} zoomLevel={zoomLevel} />
+            <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
           </div>
         </div>
 
