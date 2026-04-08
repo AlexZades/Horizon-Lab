@@ -230,7 +230,7 @@ export default function Home() {
       {/* ── Main content area ── */}
       <div className="relative flex-1">
         {/* ── Globe (fills entire area behind everything) ── */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))]">
+        <div className="absolute inset-0 -top-14 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))]">
           <div className="h-full w-full animate-boot-globe">
             <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
           </div>
