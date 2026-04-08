@@ -29,6 +29,75 @@ import {
   Camera,
   Server,
   type LucideIcon,
+  // Networking & Infrastructure
+  Network,
+  Router,
+  Cable,
+  Signal,
+  Antenna,
+  // Containers & DevOps
+  Container,
+  Box,
+  Boxes,
+  GitBranch,
+  GitFork,
+  Code,
+  Webhook,
+  // Storage & Files
+  FolderOpen,
+  Archive,
+  Download,
+  Upload,
+  CloudDownload,
+  CloudUpload,
+  // Media & Entertainment
+  Tv,
+  Gamepad2,
+  Headphones,
+  Image,
+  Play,
+  Film,
+  // Security & Auth
+  ShieldCheck,
+  KeyRound,
+  Fingerprint,
+  Eye,
+  ScanLine,
+  // Home Automation & IoT
+  Home,
+  Lightbulb,
+  Thermometer,
+  Fan,
+  Power,
+  Plug,
+  // Communication
+  Phone,
+  Send,
+  Bell,
+  Megaphone,
+  // Monitoring & Analytics
+  Activity,
+  BarChart3,
+  LineChart,
+  Gauge,
+  HeartPulse,
+  // Development & Tools
+  Wrench,
+  Settings as SettingsIcon,
+  Cog,
+  Bug,
+  Blocks,
+  // Misc / General
+  Search,
+  Clock,
+  Calendar,
+  Bookmark,
+  Link,
+  Printer,
+  Bot,
+  Brain,
+  Sparkles,
+  Map as MapIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +122,7 @@ import {
 import type { Service, Server as ServerType, Settings } from '@/lib/database';
 
 const ICON_MAP: Record<string, LucideIcon> = {
+  // General
   Globe,
   Shield,
   Database,
@@ -73,6 +143,75 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Rss,
   Zap,
   Server,
+  // Networking & Infrastructure
+  Network,
+  Router,
+  Cable,
+  Signal,
+  Antenna,
+  // Containers & DevOps
+  Container,
+  Box,
+  Boxes,
+  GitBranch,
+  GitFork,
+  Code,
+  Webhook,
+  // Storage & Files
+  FolderOpen,
+  Archive,
+  Download,
+  Upload,
+  CloudDownload,
+  CloudUpload,
+  // Media & Entertainment
+  Tv,
+  Gamepad2,
+  Headphones,
+  Image,
+  Play,
+  Film,
+  // Security & Auth
+  ShieldCheck,
+  KeyRound,
+  Fingerprint,
+  Eye,
+  ScanLine,
+  // Home Automation & IoT
+  Home,
+  Lightbulb,
+  Thermometer,
+  Fan,
+  Power,
+  Plug,
+  // Communication
+  Phone,
+  Send,
+  Bell,
+  Megaphone,
+  // Monitoring & Analytics
+  Activity,
+  BarChart3,
+  LineChart,
+  Gauge,
+  HeartPulse,
+  // Development & Tools
+  Wrench,
+  Settings: SettingsIcon,
+  Cog,
+  Bug,
+  Blocks,
+  // Misc / General
+  Search,
+  Clock,
+  Calendar,
+  Bookmark,
+  Link,
+  Printer,
+  Bot,
+  Brain,
+  Sparkles,
+  Map: MapIcon,
 };
 
 const ICON_NAMES = Object.keys(ICON_MAP);
@@ -183,21 +322,24 @@ function ServiceForm({
 
       <div className="space-y-2">
         <Label>Icon</Label>
-        <div className="grid grid-cols-6 gap-2">
-          {ICON_NAMES.map((name) => (
-            <button
-              key={name}
-              type="button"
-              onClick={() => setForm((current) => ({ ...current, icon: name }))}
-              className={`flex h-10 items-center justify-center rounded-md border transition-colors ${
-                form.icon === name
-                  ? 'border-purple-400/50 bg-purple-500/15 text-purple-200'
-                  : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white'
-              }`}
-            >
-              <ServiceIcon name={name} className="h-4 w-4" />
-            </button>
-          ))}
+        <div className="max-h-[200px] overflow-y-auto rounded-md border border-white/10 p-2">
+          <div className="grid grid-cols-7 gap-1.5">
+            {ICON_NAMES.map((name) => (
+              <button
+                key={name}
+                type="button"
+                title={name}
+                onClick={() => setForm((current) => ({ ...current, icon: name }))}
+                className={`flex h-9 items-center justify-center rounded-md border transition-colors ${
+                  form.icon === name
+                    ? 'border-purple-400/50 bg-purple-500/15 text-purple-200'
+                    : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white'
+                }`}
+              >
+                <ServiceIcon name={name} className="h-4 w-4" />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

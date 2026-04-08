@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState, createContext, useContext } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { feature } from 'topojson-client';
@@ -11,6 +11,23 @@ import type { Feature, FeatureCollection, Geometry, GeoJsonProperties } from 'ge
 const GLOBE_RADIUS = 2;
 const ROTATION_SPEED = 0.08;
 const RAINBOW = ['#ff4d6d', '#ff9f1c', '#ffe66d', '#2ec4b6', '#4cc9f0', '#7b61ff', '#f72585'];
+
+// Zoom configuration — similar to satellitemap.space
+const DEFAULT_CAMERA_DISTANCE = 5.6;
+const MIN_DISTANCE = 2.8;  // closest zoom (just above globe surface)
+const MAX_DISTANCE = 12;   // farthest zoom
+
+// Context to share camera distance with all child components
+const CameraDistanceContext = createContext<React.MutableRefObject<number>>({ current: DEFAULT_CAMERA_DISTANCE });
+
+function useCameraDistance() {
+  return useContext(CameraDistanceContext);
+}
+
+/** Returns a scale factor: 1.0 at default distance, smaller when zoomed in, larger when zoomed out */
+function getZoomScale(distance: number) {
+  return distance / DEFAULT_CAMERA_DISTANCE;
+}
 
 export interface GlobePoint {
   id: string;
@@ -64,6 +81,7 @@ function latLngToXYZ(lon: number, lat: number, radius: number): [number, number,
 
 function PointCloud({ pointCount = 2200 }: { pointCount?: number }) {
   const pointsRef = useRef<THREE.Points>(null);
+  const distanceRef = useCameraDistance();
 
   const { positions, colors } = useMemo(() => {
     const positionsArray = new Float32Array(pointCount * 3);
@@ -86,6 +104,14 @@ function PointCloud({ pointCount = 2200 }: { pointCount?: number }) {
 
     return { positions: positionsArray, colors: colorsArray };
   }, [pointCount]);
+
+  useFrame(() => {
+    if (pointsRef.current) {
+      const material = pointsRef.current.material as THREE.PointsMaterial;
+      const scale = getZoomScale(distanceRef.current);
+      material.size = 0.018 * scale;
+    }
+  });
 
   return (
     <points ref={pointsRef}>
@@ -192,23 +218,30 @@ function GlobeMarker({
   setHovered: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const pulseRef = useRef<THREE.Mesh>(null);
+  const dotRef = useRef<THREE.Mesh>(null);
+  const distanceRef = useCameraDistance();
   const position = useMemo(() => latLngToVector3(point.lat, point.lng, GLOBE_RADIUS + 0.06), [point.lat, point.lng]);
   const color = getPointColor(point);
   const sizeMultiplier = point.dotSizeMultiplier ?? 1;
-  const size = (point.type === 'device' ? 0.0275 : point.isHost ? 0.045 : 0.0375) * sizeMultiplier;
+  const baseSize = (point.type === 'device' ? 0.0275 : point.isHost ? 0.045 : 0.0375) * sizeMultiplier;
 
   useFrame((state) => {
-    if (!pulseRef.current) {
-      return;
+    const scale = getZoomScale(distanceRef.current);
+
+    if (dotRef.current) {
+      dotRef.current.scale.setScalar(scale);
     }
 
-    const scale = 1 + Math.sin(state.clock.elapsedTime * 2.5) * 0.22;
-    pulseRef.current.scale.setScalar(scale);
+    if (pulseRef.current) {
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 2.5) * 0.22;
+      pulseRef.current.scale.setScalar(scale * pulse);
+    }
   });
 
   return (
     <group>
       <mesh
+        ref={dotRef}
         position={position}
         onPointerOver={(event) => {
           event.stopPropagation();
@@ -219,12 +252,12 @@ function GlobeMarker({
           setHovered(null);
         }}
       >
-        <sphereGeometry args={[size, 18, 18]} />
+        <sphereGeometry args={[baseSize, 18, 18]} />
         <meshBasicMaterial color={color} />
       </mesh>
 
       <mesh ref={pulseRef} position={position}>
-        <sphereGeometry args={[size * (point.isHost ? 2.8 : 2.4), 16, 16]} />
+        <sphereGeometry args={[baseSize * (point.isHost ? 2.8 : 2.4), 16, 16]} />
         <meshBasicMaterial color={color} transparent opacity={point.status === 'offline' ? 0.18 : 0.12} />
       </mesh>
 
@@ -307,6 +340,7 @@ function createArc(from: THREE.Vector3, to: THREE.Vector3) {
 
 function TrafficStream({ connection }: { connection: TrafficConnection }) {
   const particleRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const distanceRef = useCameraDistance();
   const particlesPerDirection = connection.kind === 'client' ? 3 : 2;
   const trailLength = 7;
   const speed = connection.kind === 'client' ? 0.09 : 0.07;
@@ -331,6 +365,7 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
 
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
+    const zoomScale = getZoomScale(distanceRef.current);
 
     for (let particleIndex = 0; particleIndex < totalParticles; particleIndex += 1) {
       const isReverse = particleIndex >= particlesPerDirection;
@@ -348,9 +383,9 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
         if (isReverse) t = 1 - t;
 
         const point = curve.getPointAt(t);
-        const scale = trailIndex === 0 ? 1.1 : Math.max(0.3, 1 - trailIndex * 0.1);
+        const baseScale = trailIndex === 0 ? 1.1 : Math.max(0.3, 1 - trailIndex * 0.1);
         mesh.position.copy(point);
-        mesh.scale.setScalar(scale);
+        mesh.scale.setScalar(baseScale * zoomScale);
       }
     }
   });
@@ -392,6 +427,18 @@ function TrafficStream({ connection }: { connection: TrafficConnection }) {
   );
 }
 
+/** Tracks camera distance and stores it in the shared ref */
+function CameraDistanceTracker() {
+  const { camera } = useThree();
+  const distanceRef = useCameraDistance();
+
+  useFrame(() => {
+    distanceRef.current = camera.position.length();
+  });
+
+  return null;
+}
+
 function Scene({ points, connections }: { points: GlobePoint[]; connections: TrafficConnection[] }) {
   const rotationGroupRef = useRef<THREE.Group>(null);
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
@@ -406,6 +453,7 @@ function Scene({ points, connections }: { points: GlobePoint[]; connections: Tra
 
   return (
     <>
+      <CameraDistanceTracker />
       <ambientLight intensity={0.8} />
       <pointLight position={[4, 3, 5]} intensity={1.6} color="#c084fc" />
       <pointLight position={[-4, -2, -3]} intensity={1.2} color="#38bdf8" />
@@ -428,9 +476,12 @@ function Scene({ points, connections }: { points: GlobePoint[]; connections: Tra
       </group>
 
       <OrbitControls
-        enableZoom={false}
+        enableZoom={true}
         enablePan={false}
         autoRotate={false}
+        minDistance={MIN_DISTANCE}
+        maxDistance={MAX_DISTANCE}
+        zoomSpeed={0.8}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={(3 * Math.PI) / 4}
       />
@@ -439,11 +490,15 @@ function Scene({ points, connections }: { points: GlobePoint[]; connections: Tra
 }
 
 export default function Globe({ points = [], connections = [], className }: GlobeProps) {
+  const cameraDistanceRef = useRef(DEFAULT_CAMERA_DISTANCE);
+
   return (
     <div className={className}>
-      <Canvas camera={{ position: [0, 0, 5.6], fov: 42 }} gl={{ alpha: true, antialias: true }}>
-        <Scene points={points} connections={connections} />
-      </Canvas>
+      <CameraDistanceContext.Provider value={cameraDistanceRef}>
+        <Canvas camera={{ position: [0, 0, DEFAULT_CAMERA_DISTANCE], fov: 42 }} gl={{ alpha: true, antialias: true }}>
+          <Scene points={points} connections={connections} />
+        </Canvas>
+      </CameraDistanceContext.Provider>
     </div>
   );
 }
