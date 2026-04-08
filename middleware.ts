@@ -20,8 +20,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname === '/api/unlock') {
-    return NextResponse.next();
+  // Handle unlock API directly in middleware so the Set-Cookie header
+  // is guaranteed to reach the browser.
+  if (pathname === '/api/unlock' && request.method === 'POST') {
+    const body = await request.json();
+    const submittedPassword = typeof body?.password === 'string' ? body.password : '';
+
+    if (submittedPassword !== configuredPassword) {
+      return NextResponse.json({ message: 'Incorrect password' }, { status: 401 });
+    }
+
+    const newToken = await createDashboardAuthToken(configuredPassword);
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+
+    const response = NextResponse.json({ ok: true, passwordEnabled: true });
+    response.headers.set(
+      'Set-Cookie',
+      `${DASHBOARD_AUTH_COOKIE}=${newToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${secure}`
+    );
+    return response;
   }
 
   if (!isAuthenticated) {
