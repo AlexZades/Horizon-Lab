@@ -11,7 +11,6 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # Build the Next.js application
-# 'output' directory contains the optimized Next.js build
 RUN yarn build
 
 # Stage 2: Create the production-ready image
@@ -24,20 +23,24 @@ ENV PORT=3000
 WORKDIR /app
 
 # Copy only necessary files from the builder stage
-# The .next directory contains the production build of Next.js
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
-# Copy the data directory so the volume gets seeded with initial db.json on first run
-COPY --from=builder /app/data ./data
-# If you have static assets in a separate 'static' folder, copy them too
-# COPY --from=builder /app/static ./static
 
-# No native dependencies for lowdb or @foreast/file-async, so no extra build tools or libs needed.
+# Copy the seed database to a SEPARATE location that won't be shadowed
+# by the volume mount on /app/data. The entrypoint script copies it
+# into /app/data on first run if the volume is empty.
+COPY --from=builder /app/data ./data-seed
 
-# Expose the port Next.js will run on
+# Create the data directory (will be the volume mount point)
+RUN mkdir -p /app/data
+
+# Copy and set up the entrypoint script
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 EXPOSE 3000
 
-# Command to run the Next.js application in production mode
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["yarn", "start"]

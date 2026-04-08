@@ -158,6 +158,10 @@ export async function getDb(): Promise<Low<DbSchema>> {
     };
     db.data = cleanData;
 
+    // Persist to disk so that db.json is always created on first run
+    // (e.g. when a volume mount starts empty on TrueNAS / Docker).
+    await db.write();
+
     globalForDb.__lowdb_instance = db;
 
     console.log(`Database initialized/loaded from: ${dbFullPath}`);

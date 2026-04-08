@@ -7,6 +7,11 @@ services:
     ports:
       - '3000:3000'
     volumes:
+      # Option A — Host path bind mount (recommended for TrueNAS / Unraid / etc.)
+      # Replace with the absolute path to a directory on your host/NAS:
+      # - /mnt/pool/dataset/appdata/tower-network:/app/data
+      #
+      # Option B — Docker named volume (works on standard Docker / Docker Compose)
       - dyad_db_data:/app/data
     environment:
       NODE_ENV: production
@@ -17,5 +22,7 @@ services:
       # DASHBOARD_PASSWORD: 'set-a-strong-dashboard-password'
     restart: unless-stopped
 
+# Only needed if using Option B (named volume) above.
+# Remove or comment out this section if using Option A (host path).
 volumes:
   dyad_db_data:
