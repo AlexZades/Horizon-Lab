@@ -218,7 +218,7 @@ export default function Home() {
       </div>
 
       {/* ── Navbar ── */}
-      <div className="animate-boot-navbar">
+      <div className="animate-boot-navbar relative z-30">
         <Navbar
           siteName={settings.siteName}
           titleIconPath={settings.titleIconPath}
@@ -227,52 +227,58 @@ export default function Home() {
         />
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-        {/* ── Globe area ── */}
-        <div className="relative min-h-[50vh] flex-1 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))] md:min-h-0">
-          {(showTime || showWeekday) && (
-            <TimeWidgets showTime={showTime} showWeekday={showWeekday} />
-          )}
-
+      {/* ── Main content area ── */}
+      <div className="relative flex-1">
+        {/* ── Globe (fills entire area behind everything) ── */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))]">
           <div className="h-full w-full animate-boot-globe">
             <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
           </div>
-
-          {showLegend && (
-            <div className="absolute bottom-4 left-4 z-20 rounded-xl border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-black/60 px-4 py-3 backdrop-blur-xl animate-boot-legend">
-              <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                Globe legend
-              </div>
-              <div className="space-y-2 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: settings.dotColorOnline, boxShadow: `0 0 10px ${settings.dotColorOnline}` }}
-                  />
-                  <span>Online server</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: settings.dotColorOffline, boxShadow: `0 0 10px ${settings.dotColorOffline}` }}
-                  />
-                  <span>Offline server</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#b794f4] shadow-[0_0_10px_rgba(183,148,244,0.85)]" />
-                  <span>Host server</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#86efac] shadow-[0_0_10px_rgba(134,239,172,0.85)]" />
-                  <span>Client device</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* ── Service panel ── */}
-        <div className="h-[45vh] shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-black/45 md:h-auto md:w-[380px] md:border-l md:border-t-0 xl:w-[420px] animate-boot-panel">
+        {/* ── Overlay widgets (on top of globe) ── */}
+        {(showTime || showWeekday) && (
+          <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="pointer-events-auto">
+              <TimeWidgets showTime={showTime} showWeekday={showWeekday} />
+            </div>
+          </div>
+        )}
+
+        {showLegend && (
+          <div className="absolute bottom-4 left-4 z-20 rounded-xl border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-black/60 px-4 py-3 backdrop-blur-xl animate-boot-legend">
+            <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              Globe legend
+            </div>
+            <div className="space-y-2 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: settings.dotColorOnline, boxShadow: `0 0 10px ${settings.dotColorOnline}` }}
+                />
+                <span>Online server</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: settings.dotColorOffline, boxShadow: `0 0 10px ${settings.dotColorOffline}` }}
+                />
+                <span>Offline server</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#b794f4] shadow-[0_0_10px_rgba(183,148,244,0.85)]" />
+                <span>Host server</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#86efac] shadow-[0_0_10px_rgba(134,239,172,0.85)]" />
+                <span>Client device</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Service panel (overlays from the right edge) ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 h-[45vh] border-t border-slate-200 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-black/45 md:bottom-0 md:left-auto md:right-0 md:top-0 md:h-full md:w-[380px] md:border-l md:border-t-0 xl:w-[420px] animate-boot-panel">
           <ServicePanel
             services={services}
             servers={servers}

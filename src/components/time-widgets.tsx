@@ -77,7 +77,7 @@ export default function TimeWidgets({ showTime = true, showWeekday = true }: Tim
   }, [epochMs]);
 
   return (
-    <div className="absolute right-4 top-4 z-20 flex w-[220px] flex-col gap-3">
+    <div className="absolute right-4 top-4 z-20 flex w-[220px] flex-col gap-3 md:right-[396px] xl:right-[436px]">
       {showTime && (
         <Card className="border-slate-200 bg-white/80 shadow-md dark:border-white/10 dark:bg-black/55 dark:shadow-[0_0_40px_rgba(91,33,182,0.18)] backdrop-blur-xl animate-boot-widget-1">
           <CardContent className="p-4">
