@@ -31,6 +31,15 @@ export interface Settings {
   deviceLat: number | null;
   deviceLng: number | null;
   dashboardHostServerId: string | null;
+  widgetVisibility: {
+    time: boolean;
+    weekday: boolean;
+    globeLegend: boolean;
+  };
+  dotSize: 'small' | 'medium' | 'large';
+  dotColorOnline: string;
+  dotColorOffline: string;
+  theme: 'light' | 'dark';
 }
 
 interface DbSchema {
@@ -51,6 +60,15 @@ const defaultData: DbSchema = {
     deviceLat: 0,
     deviceLng: 0,
     dashboardHostServerId: null,
+    widgetVisibility: {
+      time: true,
+      weekday: true,
+      globeLegend: true,
+    },
+    dotSize: 'medium',
+    dotColorOnline: '#9bd2ff',
+    dotColorOffline: '#5a0f16',
+    theme: 'dark',
   },
 };
 
@@ -70,6 +88,24 @@ function ensureDataIntegrity(data: DbSchema) {
   }
   if (data.settings.dashboardHostServerId === undefined) {
     data.settings.dashboardHostServerId = null;
+  }
+  if (!data.settings.widgetVisibility) {
+    data.settings.widgetVisibility = { time: true, weekday: true, globeLegend: true };
+  }
+  if (data.settings.widgetVisibility.globeLegend === undefined) {
+    data.settings.widgetVisibility.globeLegend = true;
+  }
+  if (!data.settings.dotSize) {
+    data.settings.dotSize = 'medium';
+  }
+  if (!data.settings.dotColorOnline) {
+    data.settings.dotColorOnline = '#9bd2ff';
+  }
+  if (!data.settings.dotColorOffline) {
+    data.settings.dotColorOffline = '#5a0f16';
+  }
+  if (!data.settings.theme) {
+    data.settings.theme = 'dark';
   }
 
   for (const service of data.services) {

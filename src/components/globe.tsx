@@ -21,6 +21,10 @@ export interface GlobePoint {
   status?: 'online' | 'offline' | 'unknown';
   isHost?: boolean;
   activeServices?: string[];
+  offlineServices?: string[];
+  dotColorOnline?: string;
+  dotColorOffline?: string;
+  dotSizeMultiplier?: number;
 }
 
 export interface TrafficConnection {
@@ -172,10 +176,10 @@ function ContinentOutlines() {
 
 function getPointColor(point: GlobePoint) {
   if (point.type === 'device') return '#86efac';
-  if (point.status === 'offline') return '#5a0f16';
+  if (point.status === 'offline') return point.dotColorOffline ?? '#5a0f16';
   if (point.isHost) return '#b794f4';
   if (point.status === 'unknown') return '#f5c76d';
-  return '#9bd2ff';
+  return point.dotColorOnline ?? '#9bd2ff';
 }
 
 function GlobeMarker({
@@ -189,9 +193,9 @@ function GlobeMarker({
 }) {
   const pulseRef = useRef<THREE.Mesh>(null);
   const position = useMemo(() => latLngToVector3(point.lat, point.lng, GLOBE_RADIUS + 0.06), [point.lat, point.lng]);
-  const tooltipPosition = position;
   const color = getPointColor(point);
-  const size = point.type === 'device' ? 0.0275 : point.isHost ? 0.045 : 0.0375;
+  const sizeMultiplier = point.dotSizeMultiplier ?? 1;
+  const size = (point.type === 'device' ? 0.0275 : point.isHost ? 0.045 : 0.0375) * sizeMultiplier;
 
   useFrame((state) => {
     if (!pulseRef.current) {
@@ -225,13 +229,21 @@ function GlobeMarker({
       </mesh>
 
       {hovered ? (
-        <Html position={tooltipPosition} distanceFactor={8} style={{ pointerEvents: 'none', transform: 'scale(0.25) translate(40px, -50%)', transformOrigin: 'left center' }}>
-          <div className="min-w-[160px] rounded-xl border border-white/10 bg-black/80 px-2.5 py-2 text-white shadow-[0_0_24px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <Html
+          position={position}
+          distanceFactor={8}
+          center
+          style={{
+            pointerEvents: 'none',
+            transform: 'translate(0, -100%)',
+          }}
+        >
+          <div className="min-w-[160px] max-w-[220px] rounded-xl border border-white/10 bg-black/80 px-2.5 py-2 text-white shadow-[0_0_24px_rgba(0,0,0,0.45)] backdrop-blur-xl" style={{ fontSize: '10px' }}>
             <div className="flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
-              <div className="text-[11px] font-semibold leading-tight">{point.label}</div>
+              <div className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+              <div className="font-semibold leading-tight" style={{ fontSize: '11px' }}>{point.label}</div>
               {point.isHost ? (
-                <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-1.5 py-px text-[7px] uppercase tracking-[0.14em] text-purple-200">
+                <span className="shrink-0 rounded-full border border-purple-400/20 bg-purple-500/10 px-1.5 py-px uppercase tracking-[0.14em] text-purple-200" style={{ fontSize: '7px' }}>
                   Host
                 </span>
               ) : null}
@@ -239,24 +251,45 @@ function GlobeMarker({
 
             {point.type === 'server' ? (
               <>
-                <p className="mt-1 text-[8px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Active services
-                </p>
                 {point.activeServices && point.activeServices.length > 0 ? (
-                  <ul className="mt-1 space-y-0.5 text-[9px] text-slate-200">
-                    {point.activeServices.map((serviceName) => (
-                      <li key={serviceName} className="flex items-center gap-1.5">
-                        <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                        <span>{serviceName}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-1 text-[9px] text-muted-foreground">No active services.</p>
-                )}
+                  <>
+                    <p className="mt-1.5 uppercase tracking-[0.18em] text-muted-foreground" style={{ fontSize: '8px' }}>
+                      Online services
+                    </p>
+                    <ul className="mt-0.5 space-y-0.5 text-slate-200" style={{ fontSize: '9px' }}>
+                      {point.activeServices.map((serviceName) => (
+                        <li key={serviceName} className="flex items-center gap-1.5">
+                          <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
+                          <span className="truncate">{serviceName}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {point.offlineServices && point.offlineServices.length > 0 ? (
+                  <>
+                    <p className="mt-1.5 uppercase tracking-[0.18em] text-muted-foreground" style={{ fontSize: '8px' }}>
+                      Offline services
+                    </p>
+                    <ul className="mt-0.5 space-y-0.5 text-slate-200" style={{ fontSize: '9px' }}>
+                      {point.offlineServices.map((serviceName) => (
+                        <li key={serviceName} className="flex items-center gap-1.5">
+                          <span className="h-1 w-1 shrink-0 rounded-full bg-red-400" />
+                          <span className="truncate">{serviceName}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {(!point.activeServices || point.activeServices.length === 0) &&
+                 (!point.offlineServices || point.offlineServices.length === 0) ? (
+                  <p className="mt-1 text-muted-foreground" style={{ fontSize: '9px' }}>No services assigned.</p>
+                ) : null}
               </>
             ) : (
-              <p className="mt-1 text-[9px] text-muted-foreground">Client location.</p>
+              <p className="mt-1 text-muted-foreground" style={{ fontSize: '9px' }}>Client location.</p>
             )}
           </div>
         </Html>

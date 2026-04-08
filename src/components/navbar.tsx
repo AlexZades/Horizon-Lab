@@ -13,7 +13,7 @@ interface NavbarProps {
 
 export default function Navbar({ siteName, titleIconPath, totalServices, onlineServices }: NavbarProps) {
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/70 dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
           {titleIconPath ? (
@@ -25,18 +25,18 @@ export default function Navbar({ siteName, titleIconPath, totalServices, onlineS
           ) : (
             <Server className="h-5 w-5 text-purple-400" />
           )}
-          <span className="text-lg font-semibold tracking-tight text-white">
+          <span className="text-lg font-semibold tracking-tight text-foreground">
             {siteName}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-3 py-1.5">
             <Activity className="h-3.5 w-3.5 text-emerald-400" />
             <span className="text-xs text-muted-foreground">
               <span className="font-medium text-emerald-400">{onlineServices}</span>
               <span className="mx-1">/</span>
-              <span className="font-medium text-white">{totalServices}</span>
+              <span className="font-medium text-foreground">{totalServices}</span>
               <span className="ml-1 hidden sm:inline">services online</span>
             </span>
           </div>

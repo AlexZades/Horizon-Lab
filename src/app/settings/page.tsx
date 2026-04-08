@@ -1,8 +1,9 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ImagePlus, MapPin, Plus, Save, ServerCog, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, ImagePlus, MapPin, Moon, Palette, Plus, Save, ServerCog, Sun, Trash2, Upload, X } from 'lucide-react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { Server, Settings } from '@/lib/database';
 
 const defaultSettings: Settings = {
@@ -30,6 +32,11 @@ const defaultSettings: Settings = {
   deviceLat: 0,
   deviceLng: 0,
   dashboardHostServerId: null,
+  widgetVisibility: { time: true, weekday: true, globeLegend: true },
+  dotSize: 'medium',
+  dotColorOnline: '#9bd2ff',
+  dotColorOffline: '#5a0f16',
+  theme: 'dark',
 };
 
 const emptyNewServer = {
@@ -48,6 +55,7 @@ export default function SettingsPage() {
   const [selectedIconFile, setSelectedIconFile] = useState<File | null>(null);
   const [selectedIconPreview, setSelectedIconPreview] = useState<string | null>(null);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
+  const { setTheme } = useTheme();
 
   async function loadData() {
     const [settingsResponse, serversResponse] = await Promise.all([
@@ -55,12 +63,15 @@ export default function SettingsPage() {
       fetch('/api/servers', { cache: 'no-store' }),
     ]);
 
-    setSettings((await settingsResponse.json()) as Settings);
+    const loadedSettings = (await settingsResponse.json()) as Settings;
+    setSettings(loadedSettings);
     setServers((await serversResponse.json()) as Server[]);
+    setTheme(loadedSettings.theme);
   }
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const hostServer = useMemo(
@@ -82,7 +93,9 @@ export default function SettingsPage() {
         throw new Error('Failed to save settings');
       }
 
-      setSettings((await response.json()) as Settings);
+      const saved = (await response.json()) as Settings;
+      setSettings(saved);
+      setTheme(saved.theme);
       toast.success('Settings saved');
     } catch {
       toast.error('Failed to save settings');
@@ -262,11 +275,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(180deg,_rgba(5,8,22,1),_rgba(0,0,0,1))] text-white">
+    <div className="min-h-screen bg-slate-50 text-foreground dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(180deg,_rgba(5,8,22,1),_rgba(0,0,0,1))]">
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-6 animate-page-open">
         <div className="mb-8 flex items-center gap-3">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-white">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -279,7 +292,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
+          <Card className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="text-base">General</CardTitle>
             </CardHeader>
@@ -292,13 +305,13 @@ export default function SettingsPage() {
                   onChange={(event) =>
                     setSettings((current) => ({ ...current, siteName: event.target.value }))
                   }
-                  className="border-white/10 bg-white/5"
+                  className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Homepage title icon</Label>
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-3">
                   {settings.titleIconPath ? (
                     <img
                       src={settings.titleIconPath}
@@ -306,12 +319,12 @@ export default function SettingsPage() {
                       className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/10"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/30 text-muted-foreground">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100 dark:border-white/15 dark:bg-black/30 text-muted-foreground">
                       <ImagePlus className="h-4 w-4" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-white">Homepage title icon</p>
+                    <p className="text-sm font-medium text-foreground">Homepage title icon</p>
                     <p className="text-xs text-muted-foreground">
                       Upload a PNG, JPG, WEBP, or GIF to replace the icon next to the title.
                     </p>
@@ -327,7 +340,7 @@ export default function SettingsPage() {
                     }}
                   >
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="border-white/10 bg-white/5">
+                      <Button variant="outline" className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
                         Change icon
                       </Button>
                     </DialogTrigger>
@@ -343,12 +356,12 @@ export default function SettingsPage() {
                             type="file"
                             accept="image/png,image/jpeg,image/webp,image/gif"
                             onChange={handleIconFileChange}
-                            className="border-white/10 bg-white/5 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white"
+                            className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white"
                           />
                           <p className="text-xs text-muted-foreground">Max size: 2MB.</p>
                         </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-4">
                           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Preview</p>
                           <div className="flex items-center gap-3">
                             {selectedIconPreview || settings.titleIconPath ? (
@@ -358,7 +371,7 @@ export default function SettingsPage() {
                                 className="h-12 w-12 rounded-xl object-cover ring-1 ring-white/10"
                               />
                             ) : (
-                              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-white/15 bg-black/40 text-muted-foreground">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 dark:border-white/15 dark:bg-black/40 text-muted-foreground">
                                 <ImagePlus className="h-5 w-5" />
                               </div>
                             )}
@@ -401,10 +414,10 @@ export default function SettingsPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="border-white/10 bg-white/5">
+                  <SelectTrigger className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
                     <SelectValue placeholder="Select a host server" />
                   </SelectTrigger>
-                  <SelectContent className="border-white/10 bg-zinc-950 text-white">
+                  <SelectContent className="border-slate-200 bg-white dark:border-white/10 dark:bg-zinc-950 text-foreground">
                     <SelectItem value="none">No host selected</SelectItem>
                     {servers.map((server) => (
                       <SelectItem key={server.id} value={server.id}>
@@ -427,63 +440,264 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-base">Client device location</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="device-lat">Latitude</Label>
-                  <Input
-                    id="device-lat"
-                    type="number"
-                    step="any"
-                    value={settings.deviceLat ?? 0}
-                    onChange={(event) =>
-                      setSettings((current) => ({
-                        ...current,
-                        deviceLat: event.target.value === '' ? 0 : Number(event.target.value),
-                      }))
+          <div className="space-y-6">
+            <Card className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-base">Client device location</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="device-lat">Latitude</Label>
+                    <Input
+                      id="device-lat"
+                      type="number"
+                      step="any"
+                      value={settings.deviceLat ?? 0}
+                      onChange={(event) =>
+                        setSettings((current) => ({
+                          ...current,
+                          deviceLat: event.target.value === '' ? 0 : Number(event.target.value),
+                        }))
+                      }
+                      className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                      placeholder="35.6895"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="device-lng">Longitude</Label>
+                    <Input
+                      id="device-lng"
+                      type="number"
+                      step="any"
+                      value={settings.deviceLng ?? 0}
+                      onChange={(event) =>
+                        setSettings((current) => ({
+                          ...current,
+                          deviceLng: event.target.value === '' ? 0 : Number(event.target.value),
+                        }))
+                      }
+                      className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                      placeholder="139.6917"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={detectLocation} variant="outline" className="gap-2 border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+                    <MapPin className="h-4 w-4" />
+                    Detect device location
+                  </Button>
+                  <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Save location
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Theme */}
+            <Card className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  {settings.theme === 'dark' ? <Moon className="h-4 w-4 text-indigo-300" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                  Theme
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Dark mode</p>
+                    <p className="text-xs text-muted-foreground">Toggle between light and dark themes.</p>
+                  </div>
+                  <Switch
+                    checked={settings.theme === 'dark'}
+                    onCheckedChange={(checked) =>
+                      setSettings((current) => ({ ...current, theme: checked ? 'dark' : 'light' }))
                     }
-                    className="border-white/10 bg-white/5"
-                    placeholder="35.6895"
                   />
                 </div>
+                <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Save theme
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Widget Visibility & Appearance */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <Card className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-base">Widget visibility</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Time widget</p>
+                  <p className="text-xs text-muted-foreground">Show the time.gov synced clock on the globe.</p>
+                </div>
+                <Switch
+                  checked={settings.widgetVisibility?.time !== false}
+                  onCheckedChange={(checked) =>
+                    setSettings((current) => ({
+                      ...current,
+                      widgetVisibility: { ...current.widgetVisibility, time: checked },
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Weekday widget</p>
+                  <p className="text-xs text-muted-foreground">Show the weekday and date on the globe.</p>
+                </div>
+                <Switch
+                  checked={settings.widgetVisibility?.weekday !== false}
+                  onCheckedChange={(checked) =>
+                    setSettings((current) => ({
+                      ...current,
+                      widgetVisibility: { ...current.widgetVisibility, weekday: checked },
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Globe legend</p>
+                  <p className="text-xs text-muted-foreground">Show the color legend on the globe view.</p>
+                </div>
+                <Switch
+                  checked={settings.widgetVisibility?.globeLegend !== false}
+                  onCheckedChange={(checked) =>
+                    setSettings((current) => ({
+                      ...current,
+                      widgetVisibility: { ...current.widgetVisibility, globeLegend: checked },
+                    }))
+                  }
+                />
+              </div>
+              <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
+                <Save className="h-4 w-4" />
+                Save visibility
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Palette className="h-4 w-4 text-pink-300" />
+                Globe dot appearance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label>Dot size</Label>
+                <Select
+                  value={settings.dotSize}
+                  onValueChange={(value: 'small' | 'medium' | 'large') =>
+                    setSettings((current) => ({ ...current, dotSize: value }))
+                  }
+                >
+                  <SelectTrigger className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-slate-200 bg-white dark:border-white/10 dark:bg-zinc-950 text-foreground">
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="device-lng">Longitude</Label>
-                  <Input
-                    id="device-lng"
-                    type="number"
-                    step="any"
-                    value={settings.deviceLng ?? 0}
-                    onChange={(event) =>
-                      setSettings((current) => ({
-                        ...current,
-                        deviceLng: event.target.value === '' ? 0 : Number(event.target.value),
-                      }))
-                    }
-                    className="border-white/10 bg-white/5"
-                    placeholder="139.6917"
-                  />
+                  <Label htmlFor="dot-color-online">Online color</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="dot-color-online"
+                      type="color"
+                      value={settings.dotColorOnline}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, dotColorOnline: event.target.value }))
+                      }
+                      className="h-9 w-12 cursor-pointer rounded-md border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-0.5"
+                    />
+                    <Input
+                      value={settings.dotColorOnline}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, dotColorOnline: event.target.value }))
+                      }
+                      className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 font-mono text-sm"
+                      placeholder="#9bd2ff"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dot-color-offline">Offline color</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="dot-color-offline"
+                      type="color"
+                      value={settings.dotColorOffline}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, dotColorOffline: event.target.value }))
+                      }
+                      className="h-9 w-12 cursor-pointer rounded-md border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-0.5"
+                    />
+                    <Input
+                      value={settings.dotColorOffline}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, dotColorOffline: event.target.value }))
+                      }
+                      className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 font-mono text-sm"
+                      placeholder="#5a0f16"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={detectLocation} variant="outline" className="gap-2 border-white/10 bg-white/5">
-                  <MapPin className="h-4 w-4" />
-                  Detect device location
-                </Button>
-                <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save location
-                </Button>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-black/30 p-3">
+                <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Preview</p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="rounded-full"
+                      style={{
+                        width: settings.dotSize === 'small' ? 8 : settings.dotSize === 'large' ? 16 : 12,
+                        height: settings.dotSize === 'small' ? 8 : settings.dotSize === 'large' ? 16 : 12,
+                        backgroundColor: settings.dotColorOnline,
+                        boxShadow: `0 0 10px ${settings.dotColorOnline}`,
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">Online</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="rounded-full"
+                      style={{
+                        width: settings.dotSize === 'small' ? 8 : settings.dotSize === 'large' ? 16 : 12,
+                        height: settings.dotSize === 'small' ? 8 : settings.dotSize === 'large' ? 16 : 12,
+                        backgroundColor: settings.dotColorOffline,
+                        boxShadow: `0 0 10px ${settings.dotColorOffline}`,
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">Offline</span>
+                  </div>
+                </div>
               </div>
+
+              <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
+                <Save className="h-4 w-4" />
+                Save appearance
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mt-6 border-white/10 bg-black/40 backdrop-blur-xl">
+        <Card className="mt-6 border-slate-200 bg-white dark:border-white/10 dark:bg-black/40 backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ServerCog className="h-4 w-4 text-cyan-300" />
@@ -495,11 +709,11 @@ export default function SettingsPage() {
               const isHost = server.id === settings.dashboardHostServerId;
 
               return (
-                <div key={server.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div key={server.id} className="rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-4">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-white">{server.name || 'Unnamed server'}</h3>
+                        <h3 className="text-sm font-semibold text-foreground">{server.name || 'Unnamed server'}</h3>
                         {isHost ? (
                           <span className="rounded-full border border-purple-400/30 bg-purple-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-purple-200">
                             Dashboard host
@@ -514,7 +728,7 @@ export default function SettingsPage() {
                       {!isHost ? (
                         <Button
                           variant="outline"
-                          className="border-white/10 bg-white/5"
+                          className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                           onClick={() =>
                             setSettings((current) => ({ ...current, dashboardHostServerId: server.id }))
                           }
@@ -543,7 +757,7 @@ export default function SettingsPage() {
                         id={`name-${server.id}`}
                         value={server.name}
                         onChange={(event) => updateServerField(server.id, 'name', event.target.value)}
-                        className="border-white/10 bg-black/30"
+                        className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/30"
                       />
                     </div>
                     <div className="space-y-2">
@@ -552,7 +766,7 @@ export default function SettingsPage() {
                         id={`ip-${server.id}`}
                         value={server.ipAddress ?? ''}
                         onChange={(event) => updateServerField(server.id, 'ipAddress', event.target.value || null)}
-                        className="border-white/10 bg-black/30"
+                        className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/30"
                         placeholder="192.168.1.10"
                       />
                     </div>
@@ -564,7 +778,7 @@ export default function SettingsPage() {
                         step="any"
                         value={server.lat}
                         onChange={(event) => updateServerField(server.id, 'lat', Number(event.target.value))}
-                        className="border-white/10 bg-black/30"
+                        className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/30"
                       />
                     </div>
                     <div className="space-y-2">
@@ -575,7 +789,7 @@ export default function SettingsPage() {
                         step="any"
                         value={server.lng}
                         onChange={(event) => updateServerField(server.id, 'lng', Number(event.target.value))}
-                        className="border-white/10 bg-black/30"
+                        className="border-slate-200 bg-white dark:border-white/10 dark:bg-black/30"
                       />
                     </div>
                   </div>
@@ -583,8 +797,8 @@ export default function SettingsPage() {
               );
             })}
 
-            <div className="rounded-2xl border border-dashed border-white/10 p-4">
-              <div className="mb-4 flex items-center gap-2 text-sm font-medium text-white">
+            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-4">
+              <div className="mb-4 flex items-center gap-2 text-sm font-medium text-foreground">
                 <Plus className="h-4 w-4 text-cyan-300" />
                 Add server
               </div>
@@ -595,7 +809,7 @@ export default function SettingsPage() {
                     id="new-server-name"
                     value={newServer.name}
                     onChange={(event) => setNewServer((current) => ({ ...current, name: event.target.value }))}
-                    className="border-white/10 bg-white/5"
+                    className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                     placeholder="Tower East"
                   />
                 </div>
@@ -607,7 +821,7 @@ export default function SettingsPage() {
                     onChange={(event) =>
                       setNewServer((current) => ({ ...current, ipAddress: event.target.value }))
                     }
-                    className="border-white/10 bg-white/5"
+                    className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                     placeholder="192.168.1.10"
                   />
                 </div>
@@ -619,7 +833,7 @@ export default function SettingsPage() {
                     step="any"
                     value={newServer.lat}
                     onChange={(event) => setNewServer((current) => ({ ...current, lat: event.target.value }))}
-                    className="border-white/10 bg-white/5"
+                    className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                     placeholder="35.647"
                   />
                 </div>
@@ -631,7 +845,7 @@ export default function SettingsPage() {
                     step="any"
                     value={newServer.lng}
                     onChange={(event) => setNewServer((current) => ({ ...current, lng: event.target.value }))}
-                    className="border-white/10 bg-white/5"
+                    className="border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
                     placeholder="139.8885"
                   />
                 </div>

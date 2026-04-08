@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { siteName, titleIconPath, deviceLat, deviceLng, dashboardHostServerId } = req.body;
+      const { siteName, titleIconPath, deviceLat, deviceLng, dashboardHostServerId, widgetVisibility, dotSize, dotColorOnline, dotColorOffline, theme } = req.body;
 
       if (
         dashboardHostServerId &&
@@ -26,6 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (dashboardHostServerId !== undefined) {
         db.data.settings.dashboardHostServerId = dashboardHostServerId || null;
       }
+      if (widgetVisibility !== undefined) db.data.settings.widgetVisibility = widgetVisibility;
+      if (dotSize !== undefined) db.data.settings.dotSize = dotSize;
+      if (dotColorOnline !== undefined) db.data.settings.dotColorOnline = dotColorOnline;
+      if (dotColorOffline !== undefined) db.data.settings.dotColorOffline = dotColorOffline;
+      if (theme !== undefined) db.data.settings.theme = theme;
 
       await db.write();
       return res.status(200).json(db.data.settings);

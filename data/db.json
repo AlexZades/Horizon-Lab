@@ -8,7 +8,7 @@
       "lng": 139.8885,
       "ipAddress": "192.168.0.17",
       "status": "offline",
-      "lastChecked": "2026-04-08T06:15:08.650Z",
+      "lastChecked": "2026-04-08T06:29:30.508Z",
       "createdAt": "2026-04-07T10:38:30.362Z"
     },
     {
@@ -18,7 +18,7 @@
       "lng": -81.01859742306927,
       "ipAddress": "imagen.st4r.io",
       "status": "offline",
-      "lastChecked": "2026-04-08T06:15:08.650Z",
+      "lastChecked": "2026-04-08T06:29:30.508Z",
       "createdAt": "2026-04-07T11:39:23.040Z"
     }
   ],
@@ -27,6 +27,15 @@
     "titleIconPath": null,
     "deviceLat": 0,
     "deviceLng": 0,
-    "dashboardHostServerId": "e0025fe2-a8f8-483b-9ac4-07e539477f4b"
+    "dashboardHostServerId": "e0025fe2-a8f8-483b-9ac4-07e539477f4b",
+    "widgetVisibility": {
+      "time": true,
+      "weekday": true,
+      "globeLegend": true
+    },
+    "dotSize": "medium",
+    "dotColorOnline": "#9bd2ff",
+    "dotColorOffline": "#5a0f16",
+    "theme": "dark"
   }
 }

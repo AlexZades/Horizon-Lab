@@ -335,9 +335,9 @@ export default function ServicePanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-white">Services by host</h2>
+          <h2 className="text-sm font-semibold text-foreground">Services by host</h2>
           <p className="text-xs text-muted-foreground">Assign services to servers and monitor grouped uptime.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -394,11 +394,11 @@ export default function ServicePanel({
             const isHost = group.server?.id === settings.dashboardHostServerId;
 
             return (
-              <section key={group.key} className="rounded-2xl border border-white/10 bg-white/5">
-                <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <section key={group.key} className="rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 px-4 py-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-white">{group.title}</h3>
+                      <h3 className="text-sm font-semibold text-foreground">{group.title}</h3>
                       {isHost ? (
                         <Badge className="border-purple-400/20 bg-purple-500/10 text-purple-200 hover:bg-purple-500/10">
                           Dashboard host
@@ -418,7 +418,7 @@ export default function ServicePanel({
                   </div>
                 </div>
 
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-slate-200 dark:divide-white/5">
                   {group.services.length === 0 ? (
                     <div className="px-4 py-5 text-sm text-muted-foreground">No services assigned to this server yet.</div>
                   ) : (
@@ -426,14 +426,14 @@ export default function ServicePanel({
                       const assignedServer = service.serverId ? serverMap.get(service.serverId) : null;
 
                       return (
-                        <div key={service.id} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/5">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/30">
+                        <div key={service.id} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-white/10 dark:bg-black/30">
                             <ServiceIcon name={service.icon} className="h-4 w-4 text-cyan-200" />
                           </div>
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="truncate text-sm font-medium text-white">{service.name}</span>
+                              <span className="truncate text-sm font-medium text-foreground">{service.name}</span>
                               <span className={`h-2 w-2 rounded-full ${statusDot(service.status)}`} />
                             </div>
                             <p className="truncate text-xs text-muted-foreground">{service.url}</p>

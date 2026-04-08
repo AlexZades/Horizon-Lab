@@ -85,8 +85,6 @@
 
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 28%),
-      linear-gradient(180deg, #040816 0%, #000000 100%);
   }
 }
 
