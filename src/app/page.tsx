@@ -200,23 +200,46 @@ export default function Home() {
   const showLegend = settings.widgetVisibility?.globeLegend !== false;
 
   return (
-    <div className="flex min-h-screen flex-col overflow-hidden bg-slate-50 dark:bg-black animate-page-open">
-      <Navbar
-        siteName={settings.siteName}
-        titleIconPath={settings.titleIconPath}
-        totalServices={services.length}
-        onlineServices={onlineServices}
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-50 dark:bg-black">
+      {/* ── Boot overlay effects ── */}
+      <div className="pointer-events-none fixed inset-0 z-[100] animate-boot-scanline">
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent shadow-[0_0_20px_4px_rgba(34,211,238,0.5)]" />
+      </div>
+      <div
+        className="pointer-events-none fixed inset-0 z-[99] animate-boot-grid-flash"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(56,189,248,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.06) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
       />
+      <div className="pointer-events-none fixed left-0 right-0 top-1/2 z-[98] -translate-y-1/2 animate-boot-hline">
+        <div className="mx-auto h-[1px] w-full origin-left bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+      </div>
+
+      {/* ── Navbar ── */}
+      <div className="animate-boot-navbar">
+        <Navbar
+          siteName={settings.siteName}
+          titleIconPath={settings.titleIconPath}
+          totalServices={services.length}
+          onlineServices={onlineServices}
+        />
+      </div>
 
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        {/* ── Globe area ── */}
         <div className="relative min-h-[50vh] flex-1 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_28%),linear-gradient(180deg,_rgba(241,245,249,1),_rgba(226,232,240,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.16),_transparent_22%),linear-gradient(180deg,_rgba(4,8,20,1),_rgba(0,0,0,1))] md:min-h-0">
           {(showTime || showWeekday) && (
             <TimeWidgets showTime={showTime} showWeekday={showWeekday} />
           )}
-          <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
+
+          <div className="h-full w-full animate-boot-globe">
+            <Globe points={globePoints} connections={trafficConnections} className="h-full w-full" />
+          </div>
 
           {showLegend && (
-            <div className="absolute bottom-4 left-4 z-20 rounded-xl border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-black/60 px-4 py-3 backdrop-blur-xl">
+            <div className="absolute bottom-4 left-4 z-20 rounded-xl border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-black/60 px-4 py-3 backdrop-blur-xl animate-boot-legend">
               <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 Globe legend
               </div>
@@ -248,7 +271,8 @@ export default function Home() {
           )}
         </div>
 
-        <div className="h-[45vh] shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-black/45 md:h-auto md:w-[380px] md:border-l md:border-t-0 xl:w-[420px]">
+        {/* ── Service panel ── */}
+        <div className="h-[45vh] shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-black/45 md:h-auto md:w-[380px] md:border-l md:border-t-0 xl:w-[420px] animate-boot-panel">
           <ServicePanel
             services={services}
             servers={servers}

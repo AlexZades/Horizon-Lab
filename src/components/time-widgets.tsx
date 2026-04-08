@@ -79,7 +79,7 @@ export default function TimeWidgets({ showTime = true, showWeekday = true }: Tim
   return (
     <div className="absolute right-4 top-4 z-20 flex w-[220px] flex-col gap-3">
       {showTime && (
-        <Card className="border-slate-200 bg-white/80 shadow-md dark:border-white/10 dark:bg-black/55 dark:shadow-[0_0_40px_rgba(91,33,182,0.18)] backdrop-blur-xl">
+        <Card className="border-slate-200 bg-white/80 shadow-md dark:border-white/10 dark:bg-black/55 dark:shadow-[0_0_40px_rgba(91,33,182,0.18)] backdrop-blur-xl animate-boot-widget-1">
           <CardContent className="p-4">
             <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-200/70">
               <Clock3 className="h-3.5 w-3.5" />
@@ -96,7 +96,7 @@ export default function TimeWidgets({ showTime = true, showWeekday = true }: Tim
       )}
 
       {showWeekday && (
-        <Card className="border-slate-200 bg-white/80 shadow-md dark:border-white/10 dark:bg-black/55 dark:shadow-[0_0_40px_rgba(34,197,94,0.12)] backdrop-blur-xl">
+        <Card className="border-slate-200 bg-white/80 shadow-md dark:border-white/10 dark:bg-black/55 dark:shadow-[0_0_40px_rgba(34,197,94,0.12)] backdrop-blur-xl animate-boot-widget-2">
           <CardContent className="p-4">
             <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">
               <CalendarDays className="h-3.5 w-3.5" />
