@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, createContext, useContext } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, createContext, useContext } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -16,6 +16,10 @@ const RAINBOW = ['#ff4d6d', '#ff9f1c', '#ffe66d', '#2ec4b6', '#4cc9f0', '#7b61ff
 const DEFAULT_CAMERA_DISTANCE = 5.6;
 const MIN_DISTANCE = 2.8;  // closest zoom (just above globe surface)
 const MAX_DISTANCE = 12;   // farthest zoom
+
+// Focus animation config
+const FOCUS_LERP_SPEED = 3.0; // how fast the globe rotates to the target
+const FOCUS_PAUSE_DURATION = 5; // seconds to pause after centering
 
 // Context to share camera distance with all child components
 const CameraDistanceContext = createContext<React.MutableRefObject<number>>({ current: DEFAULT_CAMERA_DISTANCE });
@@ -212,10 +216,12 @@ function GlobeMarker({
   point,
   hovered,
   setHovered,
+  onPointClick,
 }: {
   point: GlobePoint;
   hovered: boolean;
   setHovered: React.Dispatch<React.SetStateAction<string | null>>;
+  onPointClick: (point: GlobePoint) => void;
 }) {
   const pulseRef = useRef<THREE.Mesh>(null);
   const dotRef = useRef<THREE.Mesh>(null);
@@ -250,6 +256,10 @@ function GlobeMarker({
         onPointerOut={(event) => {
           event.stopPropagation();
           setHovered(null);
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          onPointClick(point);
         }}
       >
         <sphereGeometry args={[baseSize, 18, 18]} />
@@ -439,17 +449,133 @@ function CameraDistanceTracker() {
   return null;
 }
 
+/**
+ * Compute the target Y rotation for the globe group so that a point at the
+ * given longitude faces the camera (which sits on the +Z axis).
+ *
+ * The point is placed in local space using latLngToVector3 which maps
+ * lng to theta = (lng + 180) * π/180 and uses:
+ *   x = -r·sin(phi)·cos(theta)
+ *   z =  r·sin(phi)·sin(theta)
+ *
+ * To face the camera (+Z), we need the point's world-space Z to be maximised,
+ * which means we rotate the group by -atan2(localX, localZ).
+ * But since the group already has some rotation, we compute the *absolute*
+ * target rotation.
+ */
+function computeTargetYRotation(lng: number): number {
+  // The local-space angle of the point around Y (from +Z towards +X)
+  const theta = (lng + 180) * (Math.PI / 180);
+  // localX = -sin(phi)*cos(theta), localZ = sin(phi)*sin(theta)
+  // atan2(localX, localZ) = atan2(-cos(theta), sin(theta)) = -(π/2 - theta) = theta - π/2
+  // To bring it to face +Z we need groupRotY = -(theta - π/2) = π/2 - theta
+  return Math.PI / 2 - theta;
+}
+
+/**
+ * Compute the target polar angle for OrbitControls so the camera looks at
+ * the given latitude. Polar angle π/2 = equator, 0 = north pole, π = south pole.
+ */
+function computeTargetPolarAngle(lat: number): number {
+  return THREE.MathUtils.clamp(
+    (90 - lat) * (Math.PI / 180),
+    Math.PI / 4,       // match minPolarAngle
+    (3 * Math.PI) / 4  // match maxPolarAngle
+  );
+}
+
+/** Normalise an angle to [-π, π] */
+function normalizeAngle(angle: number): number {
+  let a = angle % (2 * Math.PI);
+  if (a > Math.PI) a -= 2 * Math.PI;
+  if (a < -Math.PI) a += 2 * Math.PI;
+  return a;
+}
+
+type FocusState =
+  | { phase: 'idle' }
+  | { phase: 'animating'; targetY: number; targetPolar: number; pointId: string }
+  | { phase: 'paused'; resumeAt: number; pointId: string };
+
 function Scene({ points, connections }: { points: GlobePoint[]; connections: TrafficConnection[] }) {
   const rotationGroupRef = useRef<THREE.Group>(null);
+  const orbitControlsRef = useRef<any>(null);
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
+  const focusRef = useRef<FocusState>({ phase: 'idle' });
+  const [focusedPointId, setFocusedPointId] = useState<string | null>(null);
 
-  useFrame((_, delta) => {
-    if (!rotationGroupRef.current) {
-      return;
+  const handlePointClick = useCallback((point: GlobePoint) => {
+    if (!rotationGroupRef.current) return;
+
+    const currentY = rotationGroupRef.current.rotation.y;
+    // Compute the raw target and then offset it to be closest to current rotation
+    const rawTarget = computeTargetYRotation(point.lng);
+    const diff = normalizeAngle(rawTarget - normalizeAngle(currentY));
+    const targetY = currentY + diff;
+
+    const targetPolar = computeTargetPolarAngle(point.lat);
+
+    focusRef.current = {
+      phase: 'animating',
+      targetY,
+      targetPolar,
+      pointId: point.id,
+    };
+    setFocusedPointId(point.id);
+    setHoveredPointId(point.id);
+  }, []);
+
+  useFrame((state, delta) => {
+    if (!rotationGroupRef.current) return;
+
+    const focus = focusRef.current;
+
+    if (focus.phase === 'animating') {
+      // Smoothly lerp globe Y rotation toward target
+      const currentY = rotationGroupRef.current.rotation.y;
+      const newY = THREE.MathUtils.lerp(currentY, focus.targetY, 1 - Math.exp(-FOCUS_LERP_SPEED * delta));
+      rotationGroupRef.current.rotation.y = newY;
+
+      // Smoothly lerp OrbitControls polar angle toward target latitude
+      if (orbitControlsRef.current) {
+        const currentPolar = orbitControlsRef.current.getPolarAngle();
+        const newPolar = THREE.MathUtils.lerp(currentPolar, focus.targetPolar, 1 - Math.exp(-FOCUS_LERP_SPEED * delta));
+        // OrbitControls uses minPolarAngle/maxPolarAngle internally, so we set it directly
+        orbitControlsRef.current.minPolarAngle = newPolar;
+        orbitControlsRef.current.maxPolarAngle = newPolar;
+        orbitControlsRef.current.update();
+      }
+
+      // Check if close enough to target
+      if (Math.abs(focus.targetY - newY) < 0.005 && orbitControlsRef.current && Math.abs(orbitControlsRef.current.getPolarAngle() - focus.targetPolar) < 0.005) {
+        rotationGroupRef.current.rotation.y = focus.targetY;
+
+        focusRef.current = {
+          phase: 'paused',
+          resumeAt: state.clock.elapsedTime + FOCUS_PAUSE_DURATION,
+          pointId: focus.pointId,
+        };
+      }
+    } else if (focus.phase === 'paused') {
+      // Keep globe still, wait for pause to end
+      if (state.clock.elapsedTime >= focus.resumeAt) {
+        // Restore OrbitControls polar angle limits
+        if (orbitControlsRef.current) {
+          orbitControlsRef.current.minPolarAngle = Math.PI / 4;
+          orbitControlsRef.current.maxPolarAngle = (3 * Math.PI) / 4;
+        }
+        focusRef.current = { phase: 'idle' };
+        setFocusedPointId(null);
+        setHoveredPointId(null);
+      }
+    } else {
+      // Idle — normal auto-rotation
+      rotationGroupRef.current.rotation.y += delta * ROTATION_SPEED;
     }
-
-    rotationGroupRef.current.rotation.y += delta * ROTATION_SPEED;
   });
+
+  // Show tooltip for focused point OR hovered point
+  const activeTooltipId = focusedPointId ?? hoveredPointId;
 
   return (
     <>
@@ -469,13 +595,15 @@ function Scene({ points, connections }: { points: GlobePoint[]; connections: Tra
           <GlobeMarker
             key={point.id}
             point={point}
-            hovered={hoveredPointId === point.id}
+            hovered={activeTooltipId === point.id}
             setHovered={setHoveredPointId}
+            onPointClick={handlePointClick}
           />
         ))}
       </group>
 
       <OrbitControls
+        ref={orbitControlsRef}
         enableZoom={true}
         enablePan={false}
         autoRotate={false}
